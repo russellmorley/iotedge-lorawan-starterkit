@@ -20,7 +20,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         private const string PrimaryKey = "ABCDEFGH1234567890";
 
         [Fact]
-        public async void DeviceGetter_OTAA_Join()
+        public async System.Threading.Tasks.Task DeviceGetter_OTAA_Join()
         {
             var devEui = TestEui.GenerateDevEui();
             var gatewayId = NewUniqueEUI64();

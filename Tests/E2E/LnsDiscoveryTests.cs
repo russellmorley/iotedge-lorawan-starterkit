@@ -27,6 +27,7 @@ namespace LoRaWan.Tests.E2E
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Hosting;
     using Xunit;
+    using LoRaWan.NetworkServerDiscovery;
 
     public sealed class LnsDiscoveryFixture : IAsyncLifetime
     {

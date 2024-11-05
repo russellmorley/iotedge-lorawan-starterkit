@@ -3,7 +3,6 @@
 
 namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
@@ -50,7 +49,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                              .Returns(Response.FromValue(blobContainerClient.Object, blobContainerClientResponseMock.Object));
 
             var azureClientFactory = new Mock<IAzureClientFactory<BlobServiceClient>>();
-            azureClientFactory.Setup(m => m.CreateClient(FacadeStartup.WebJobsStorageClientName))
+            azureClientFactory.Setup(m => m.CreateClient(Globals.WebJobsStorageClientName))
                               .Returns(blobServiceClient.Object);
 
             this.registryManager = new Mock<IDeviceRegistryManager>();

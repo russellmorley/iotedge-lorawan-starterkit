@@ -9,10 +9,10 @@ namespace LoraKeysManagerFacade.FunctionBundler
     using LoRaWan;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
+    using Microsoft.Azure.Functions.Worker;
+    using System.IO;
 
     public class FunctionBundlerFunction
     {
@@ -26,7 +26,7 @@ namespace LoraKeysManagerFacade.FunctionBundler
             this.logger = logger;
         }
 
-        [FunctionName("FunctionBundler")]
+        [Function("FunctionBundler")]
         public async Task<IActionResult> FunctionBundler(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "FunctionBundler/{devEUI}")] HttpRequest req,
             string devEUI)
@@ -47,7 +47,7 @@ namespace LoraKeysManagerFacade.FunctionBundler
 
             using var deviceScope = this.logger.BeginDeviceScope(parsedDevEui);
 
-            var requestBody = await req.ReadAsStringAsync();
+            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             if (string.IsNullOrEmpty(requestBody))
             {
                 return new BadRequestObjectResult("missing body");

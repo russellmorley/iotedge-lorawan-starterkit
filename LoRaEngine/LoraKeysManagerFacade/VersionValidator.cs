@@ -14,7 +14,7 @@ namespace LoraKeysManagerFacade
             if (req is null) throw new ArgumentNullException(nameof(req));
 
             var currentApiVersion = ApiVersion.LatestVersion;
-            req.HttpContext.Response.Headers.Add(ApiVersion.HttpHeaderName, currentApiVersion.Version);
+            req.HttpContext.Response.Headers.Append(ApiVersion.HttpHeaderName, currentApiVersion.Version);
 
             var requestedVersion = req.GetRequestedVersion();
             if (requestedVersion == null || !currentApiVersion.SupportsVersion(requestedVersion))

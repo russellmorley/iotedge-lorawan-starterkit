@@ -16,12 +16,11 @@ namespace LoraKeysManagerFacade
     using LoRaWan;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Azure;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using Microsoft.Azure.Functions.Worker;
 
     public class ConcentratorFirmwareFunction
     {
@@ -41,7 +40,7 @@ namespace LoraKeysManagerFacade
             this.logger = logger;
         }
 
-        [FunctionName(nameof(FetchConcentratorFirmware))]
+        [Function(nameof(FetchConcentratorFirmware))]
         public async Task<IActionResult> FetchConcentratorFirmware([HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
                                                                    CancellationToken cancellationToken)
         {
@@ -109,7 +108,7 @@ namespace LoraKeysManagerFacade
 
         private async Task<(long, Stream)> GetBlobStreamAsync(string blobUrl, CancellationToken cancellationToken)
         {
-            var blobServiceClient = this.azureClientFactory.CreateClient(FacadeStartup.WebJobsStorageClientName);
+            var blobServiceClient = this.azureClientFactory.CreateClient(Globals.WebJobsStorageClientName);
             var blobUri = new BlobUriBuilder(new Uri(blobUrl));
             var blobClient = blobServiceClient.GetBlobContainerClient(blobUri.BlobContainerName)
                                               .GetBlobClient(blobUri.BlobName);

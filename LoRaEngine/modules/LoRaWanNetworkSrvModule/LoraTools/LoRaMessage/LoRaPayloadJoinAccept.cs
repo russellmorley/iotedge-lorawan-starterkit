@@ -75,7 +75,7 @@ namespace LoRaTools.LoRaMessage
             var rawKey = new byte[AppKey.Size];
             _ = appKey.Write(rawKey);
             aesEngine.Init(true, new KeyParameter(rawKey));
-            using var aes = Aes.Create("AesManaged");
+            using var aes = Aes.Create();
             aes.Key = rawKey;
             aes.IV = new byte[16];
 #pragma warning disable CA5358 // Review cipher mode usage with cryptography experts
@@ -133,7 +133,7 @@ namespace LoRaTools.LoRaMessage
             pt = pt.Write(channelFrequencies);
             _ = mic.Write(pt);
 
-            using var aes = Aes.Create("AesManaged");
+            using var aes = Aes.Create();
             var rawKey = new byte[AppKey.Size];
             _ = appKey.Write(rawKey);
             aes.Key = rawKey;

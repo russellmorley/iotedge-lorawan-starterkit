@@ -7,8 +7,7 @@ namespace LoraKeysManagerFacade
     using LoRaTools.CommonAPI;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.Http;
+    using Microsoft.Azure.Functions.Worker;
     using Microsoft.Extensions.Logging;
 
     internal class LoRaDeviceJoinNotificationFunction
@@ -22,7 +21,7 @@ namespace LoraKeysManagerFacade
             this.logger = logger;
         }
 
-        [FunctionName("DeviceJoinNotification")]
+        [Function("DeviceJoinNotification")]
         public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "devicejoinnotification")] DeviceJoinNotification joinNotification,
                                  HttpRequest req)
         {

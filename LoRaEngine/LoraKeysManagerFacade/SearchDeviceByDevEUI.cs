@@ -9,9 +9,8 @@ namespace LoraKeysManagerFacade
     using LoRaWan;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Azure.Functions.Worker;
 
     public class SearchDeviceByDevEUI
     {
@@ -24,7 +23,7 @@ namespace LoraKeysManagerFacade
             this.logger = logger;
         }
 
-        [FunctionName(nameof(GetDeviceByDevEUI))]
+        [Function(nameof(GetDeviceByDevEUI))]
         public async Task<IActionResult> GetDeviceByDevEUI([HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req)
         {
             if (req is null) throw new ArgumentNullException(nameof(req));

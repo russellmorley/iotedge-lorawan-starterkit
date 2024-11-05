@@ -18,10 +18,10 @@ namespace LoraKeysManagerFacade
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.Devices;
     using Microsoft.Azure.Devices.Client.Exceptions;
-    using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
+    using Microsoft.Azure.Functions.Worker;
+    using System.IO;
 
     /// <summary>
     /// Http function to sends cloud to device messages
@@ -52,7 +52,7 @@ namespace LoraKeysManagerFacade
             this.log = log;
         }
 
-        [FunctionName("SendCloudToDeviceMessage")]
+        [Function("SendCloudToDeviceMessage")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "cloudtodevicemessage/{devEUI}")] HttpRequest req,
             string devEUI,
@@ -79,7 +79,7 @@ namespace LoraKeysManagerFacade
 
             using var deviceScope = this.log.BeginDeviceScope(parsedDevEui);
 
-            var requestBody = await req.ReadAsStringAsync();
+            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             if (string.IsNullOrEmpty(requestBody))
             {
                 return new BadRequestObjectResult("missing body");

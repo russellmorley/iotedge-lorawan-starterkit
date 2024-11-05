@@ -125,7 +125,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         }
 
         [Fact]
-        public async void When_ObservableGauge_Is_Recorded_Should_Export_To_Prometheus()
+        public async System.Threading.Tasks.Task When_ObservableGauge_Is_Recorded_Should_Export_To_Prometheus()
         {
             // arrange
             var observeValue = new Mock<Func<Measurement<int>>>();

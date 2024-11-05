@@ -132,6 +132,7 @@ namespace LoRaWan.NetworkServer.BasicsStation.Processors
         {
             using var dataOperation = this.tracing.TrackDataMessage();
 
+#pragma warning disable IDE0010 // Add missing cases
             switch (LnsData.MessageTypeReader.Read(json))
             {
                 case LnsMessageType.Version:
@@ -214,6 +215,7 @@ namespace LoRaWan.NetworkServer.BasicsStation.Processors
                 default:
                     throw new SwitchExpressionException();
             }
+#pragma warning restore IDE0010 // Add missing cases
         }
 
         private async Task<T> ExecuteWithExceptionHandlingAsync<T>(Func<Task<T>> action)

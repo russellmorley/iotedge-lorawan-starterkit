@@ -17,13 +17,12 @@ namespace LoraKeysManagerFacade
     using LoRaWan;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Azure;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Primitives;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using Microsoft.Azure.Functions.Worker;
 
     public class ConcentratorCredentialsFunction
     {
@@ -43,7 +42,7 @@ namespace LoraKeysManagerFacade
             this.logger = logger;
         }
 
-        [FunctionName(nameof(FetchConcentratorCredentials))]
+        [Function(nameof(FetchConcentratorCredentials))]
         public async Task<IActionResult> FetchConcentratorCredentials([HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
                                                                       CancellationToken cancellationToken)
         {
@@ -121,7 +120,7 @@ namespace LoraKeysManagerFacade
 
         internal virtual async Task<string> GetBase64EncodedBlobAsync(string blobUrl, CancellationToken cancellationToken)
         {
-            var blobServiceClient = this.azureClientFactory.CreateClient(FacadeStartup.WebJobsStorageClientName);
+            var blobServiceClient = this.azureClientFactory.CreateClient(Globals.WebJobsStorageClientName);
             var blobUri = new BlobUriBuilder(new Uri(blobUrl));
             using var blobStream = await blobServiceClient.GetBlobContainerClient(blobUri.BlobContainerName)
                                                           .GetBlobClient(blobUri.BlobName)

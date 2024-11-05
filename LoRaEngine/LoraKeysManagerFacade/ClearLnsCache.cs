@@ -13,9 +13,8 @@ namespace LoraKeysManagerFacade
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.Devices;
-    using Microsoft.Azure.WebJobs;
-    using Microsoft.Azure.WebJobs.Extensions.Http;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Azure.Functions.Worker;
 
     public sealed class ClearLnsCache
     {
@@ -35,7 +34,7 @@ namespace LoraKeysManagerFacade
             this.logger = logger;
         }
 
-        [FunctionName(nameof(ClearNetworkServerCache))]
+        [Function(nameof(ClearNetworkServerCache))]
         public async Task<IActionResult> ClearNetworkServerCache([HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequest req, CancellationToken cancellationToken)
         {
             if (req is null) throw new ArgumentNullException(nameof(req));

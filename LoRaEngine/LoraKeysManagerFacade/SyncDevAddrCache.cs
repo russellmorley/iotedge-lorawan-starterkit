@@ -6,9 +6,8 @@ namespace LoraKeysManagerFacade
     using System;
     using System.Threading.Tasks;
     using LoRaTools;
-    using Microsoft.Azure.WebJobs;
     using Microsoft.Extensions.Logging;
-
+    using Microsoft.Azure.Functions.Worker;
     public class SyncDevAddrCache
     {
         private readonly LoRaDevAddrCache loRaDevAddrCache;
@@ -20,7 +19,7 @@ namespace LoraKeysManagerFacade
             this.registryManager = registryManager;
         }
 
-        [FunctionName("SyncDevAddrCache")]
+        [Function("SyncDevAddrCache")]
         public async Task Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer, ILogger log)
         {
             if (myTimer is null) throw new ArgumentNullException(nameof(myTimer));

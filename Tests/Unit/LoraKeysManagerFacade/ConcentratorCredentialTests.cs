@@ -161,7 +161,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             blobContainerClient.Setup(m => m.GetBlobClient(It.IsAny<string>()))
                                .Returns(Response.FromValue(blobClient.Object, blobClientResponseMock.Object));
 
-            this.azureClientFactory.Setup(m => m.CreateClient(FacadeStartup.WebJobsStorageClientName))
+            this.azureClientFactory.Setup(m => m.CreateClient(Globals.WebJobsStorageClientName))
                                    .Returns(blobServiceClient.Object);
         }
 

@@ -61,7 +61,9 @@ namespace LoRaWan.Tests.Unit
 
         [Theory]
         [MemberData(nameof(Encode_Throws_When_Flags_Is_Invalid_Data))]
+#pragma warning disable xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         public void Encode_Throws_When_Flags_Is_Invalid(byte flags)
+#pragma warning restore xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         {
             var ex = Assert.Throws<ArgumentException>(() => FrameControl.Encode((FrameControlFlags)flags, 0));
             Assert.Equal("flags", ex.ParamName);

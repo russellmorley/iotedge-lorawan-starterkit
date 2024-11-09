@@ -18,7 +18,9 @@ namespace LoRaWan.Tests.Unit.LoRaTools.Regions
         [MemberData(nameof(RegionAS923TestData.TestRegionFrequencyData), MemberType = typeof(RegionAS923TestData))]
         [MemberData(nameof(RegionAU915RP1TestData.TestRegionFrequencyDataDR0To5), MemberType = typeof(RegionAU915RP1TestData))]
         [MemberData(nameof(RegionAU915RP1TestData.TestRegionFrequencyDataDR6), MemberType = typeof(RegionAU915RP1TestData))]
+#pragma warning disable xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         public void TestDownstreamFrequency(Region region, Hertz inputFrequency, DataRateIndex inputDataRate, Hertz outputFreq, int? joinChannel = null)
+#pragma warning restore xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         {
             var deviceJoinInfo = new DeviceJoinInfo(joinChannel);
             Assert.True(region.TryGetDownstreamChannelFrequency(inputFrequency, inputDataRate, deviceJoinInfo, out var frequency));
@@ -46,7 +48,9 @@ namespace LoRaWan.Tests.Unit.LoRaTools.Regions
         [MemberData(nameof(RegionCN470RP1TestData.TestRegionDataRateData_InvalidOffset), MemberType = typeof(RegionCN470RP1TestData))]
         [MemberData(nameof(RegionCN470RP2TestData.TestRegionDataRateData_InvalidOffset), MemberType = typeof(RegionCN470RP2TestData))]
         [MemberData(nameof(RegionAU915RP1TestData.TestRegionDataRateData_InvalidOffset), MemberType = typeof(RegionAU915RP1TestData))]
+#pragma warning disable xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         public void GetDownstreamDataRate_ThrowsWhenOffsetInvalid(Region region, DataRateIndex inputDataRate, int rx1DrOffset)
+#pragma warning restore xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         {
             var ex = Assert.Throws<LoRaProcessingException>(() => region.GetDownstreamDataRate(inputDataRate, rx1DrOffset));
             Assert.Equal(LoRaProcessingErrorCode.InvalidDataRateOffset, ex.ErrorCode);
@@ -59,7 +63,9 @@ namespace LoRaWan.Tests.Unit.LoRaTools.Regions
         [MemberData(nameof(RegionCN470RP2TestData.TestRegionLimitData), MemberType = typeof(RegionCN470RP2TestData))]
         [MemberData(nameof(RegionAS923TestData.TestRegionLimitData), MemberType = typeof(RegionAS923TestData))]
         [MemberData(nameof(RegionAU915RP1TestData.TestRegionLimitData), MemberType = typeof(RegionAU915RP1TestData))]
+#pragma warning disable xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         public void TestRegionLimit(Region region, Hertz inputFrequency, DataRateIndex datarate, int? joinChannel = null)
+#pragma warning restore xUnit1039 // The type argument to theory data is not compatible with the type of the corresponding test method parameter
         {
             var deviceJoinInfo = new DeviceJoinInfo(joinChannel);
             var ex = Assert.Throws<LoRaProcessingException>(() => region.TryGetDownstreamChannelFrequency(inputFrequency, datarate, deviceJoinInfo, out _));

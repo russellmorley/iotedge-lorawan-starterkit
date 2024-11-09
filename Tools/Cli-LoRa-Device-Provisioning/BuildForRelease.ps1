@@ -1,5 +1,5 @@
 ﻿# Builds the cli and prepares it to be updated to a release
-$DotNetVersion="net6.0"
+$DotNetVersion="net8.0"
 $ProjectFolder="./LoRaWan.Tools.CLI"
 
 Write-Host "📦 Build and package Linux x64 version..." -ForegroundColor DarkYellow

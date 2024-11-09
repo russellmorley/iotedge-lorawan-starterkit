@@ -6,3 +6,6 @@ Main documentation is found here: <https://github.com/Azure/iotedge-lorawan-star
 
 To build release artifacts use the PowerShell script provided (BuildForRelease.ps1).
 It creats a self-container package of the cli for different platforms (Windows, Linux and MacOS).
+
+
+Note: run Powershell as admin and enter 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned' in order to run the script.

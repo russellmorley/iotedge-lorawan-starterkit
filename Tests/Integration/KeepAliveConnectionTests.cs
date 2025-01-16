@@ -11,6 +11,7 @@ namespace LoRaWan.Tests.Integration
     using System.Threading;
     using System.Threading.Tasks;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
@@ -256,7 +257,7 @@ namespace LoRaWan.Tests.Integration
 
             // will search for the device by devAddr
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(simulatedDevice.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(simulatedDevice.DevAddr, simulatedDevice.DevEUI, "ada").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(simulatedDevice.DevAddr, simulatedDevice.DevEUI, "ada").AsList()));
 
             // will read the device twins
             var twin = LoRaDeviceTwin.Create(simulatedDevice.LoRaDevice.GetAbpDesiredTwinProperties() with { KeepAliveTimeout = TimeSpan.FromSeconds(3) },

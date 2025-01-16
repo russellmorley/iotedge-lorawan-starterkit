@@ -12,6 +12,7 @@ namespace LoRaWan.Tests.Integration
     using LoRaTools.LoRaMessage;
     using LoRaTools.LoRaPhysical;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Caching.Memory;
@@ -31,7 +32,7 @@ namespace LoRaWan.Tests.Integration
 
         private readonly NetworkServerConfiguration serverConfiguration;
         private readonly Region loRaRegion;
-        private readonly Mock<LoRaDeviceAPIServiceBase> deviceApi;
+        private readonly Mock<LoraDeviceManagerServicesBase> deviceApi;
         private readonly Mock<ILoRaDeviceClient> deviceClient;
         private readonly TestOutputLoggerFactory testOutputLoggerFactory;
         private readonly TestLoRaDeviceFactory loRaDeviceFactory;
@@ -50,7 +51,7 @@ namespace LoRaWan.Tests.Integration
 
             this.loRaRegion = RegionManager.EU868;
             DownstreamMessageSender = new TestDownstreamMessageSender();
-            this.deviceApi = new Mock<LoRaDeviceAPIServiceBase>(MockBehavior.Strict);
+            this.deviceApi = new Mock<LoraDeviceManagerServicesBase>(MockBehavior.Strict);
             this.deviceClient = new Mock<ILoRaDeviceClient>(MockBehavior.Loose);
             this.testOutputLoggerFactory = new TestOutputLoggerFactory(testOutputHelper);
 

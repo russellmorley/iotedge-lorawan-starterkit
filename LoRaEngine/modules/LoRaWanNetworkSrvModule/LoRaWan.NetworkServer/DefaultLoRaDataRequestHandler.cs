@@ -11,6 +11,7 @@ namespace LoRaWan.NetworkServer
     using System.Threading.Tasks;
     using LoRaTools;
     using LoRaTools.ADR;
+    using LoRaTools.FunctionBundler;
     using LoRaTools.LoRaMessage;
     using LoRaTools.Mac;
     using LoRaTools.Regions;

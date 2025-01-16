@@ -8,7 +8,7 @@ namespace LoRaWan.NetworkServer
     using System.Text;
     using System.Threading.Tasks;
     using LoRaTools;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Services;
     using Microsoft.Azure.Devices.Client;
     using Newtonsoft.Json;
 

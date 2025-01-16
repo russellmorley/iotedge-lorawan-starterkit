@@ -9,7 +9,9 @@ namespace LoRaWan.Tests.Common
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.FunctionBundler;
+    using LoRaTools.Services;
+    using LoRaTools.Version;
     using LoRaWan.Core;
     using Newtonsoft.Json;
 

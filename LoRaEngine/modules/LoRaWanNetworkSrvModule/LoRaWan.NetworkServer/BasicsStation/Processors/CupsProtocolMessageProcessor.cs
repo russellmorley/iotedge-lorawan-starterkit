@@ -15,7 +15,8 @@ namespace LoRaWan.NetworkServer.BasicsStation.Processors
     using System.Threading;
     using System.Threading.Tasks;
     using Jacob;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.BasicsStation.Processors;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer.BasicsStation.JsonHandlers;
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
@@ -23,13 +24,13 @@ namespace LoRaWan.NetworkServer.BasicsStation.Processors
     internal class CupsProtocolMessageProcessor : ICupsProtocolMessageProcessor
     {
         private readonly IBasicsStationConfigurationService basicsStationConfigurationService;
-        private readonly LoRaDeviceAPIServiceBase deviceAPIServiceBase;
+        private readonly LoraDeviceManagerServicesBase deviceAPIServiceBase;
         private readonly ILogger<CupsProtocolMessageProcessor> logger;
         private readonly Counter<int>? unhandledExceptionCount;
         internal const int MaximumAllowedContentLength = 2048;
 
         public CupsProtocolMessageProcessor(IBasicsStationConfigurationService basicsStationConfigurationService,
-                                            LoRaDeviceAPIServiceBase deviceAPIServiceBase,
+                                            LoraDeviceManagerServicesBase deviceAPIServiceBase,
                                             ILogger<CupsProtocolMessageProcessor> logger,
                                             Meter? meter)
         {
@@ -145,6 +146,12 @@ namespace LoRaWan.NetworkServer.BasicsStation.Processors
                 {
                     await someFirmware.CopyToAsync(response.BodyWriter.AsStream(), token);
                 }
+            }
+            catch (InvalidOperationException ioe)
+            {
+                this.logger.LogError(ioe, ioe.Message);
+                throw;
+
             }
             catch (Exception ex) when (ExceptionFilterUtility.False(() => this.logger.LogError(ex, "An exception occurred while processing requests: {Exception}.", ex),
                                                                     () => this.unhandledExceptionCount?.Add(1)))

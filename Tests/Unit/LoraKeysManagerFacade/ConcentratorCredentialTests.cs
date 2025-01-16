@@ -11,15 +11,16 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
     using Azure;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
-    using global::LoraKeysManagerFacade;
+    using global::LoraKeysManagerFacade.LoraDeviceManagerServices;
     using global::LoRaTools;
-    using global::LoRaTools.CommonAPI;
+    using global::LoRaTools.AzureBlobStorage;
+    using global::LoRaTools.BasicsStation.Processors;
     using global::LoRaTools.IoTHubImpl;
+    using LoraDeviceManager;
     using LoRaWan.Tests.Common;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.Devices.Shared;
-    using Microsoft.Extensions.Azure;
     using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.Extensions.Primitives;
     using Moq;
@@ -28,17 +29,36 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
     public class ConcentratorCredentialTests
     {
         private readonly Mock<IDeviceRegistryManager> registryManager;
-        private readonly Mock<IAzureClientFactory<BlobServiceClient>> azureClientFactory;
-        private readonly ConcentratorCredentialsFunction concentratorCredential;
+        //private readonly Mock<IAzureClientFactory<BlobServiceClient>> azureClientFactory;
+        private readonly Mock<BlobServiceClient> blobServiceClient;
+        private readonly IBlobStorageManager blobStorageManager;
+        private readonly FetchConcentratorCredentialsFunction fetchConcentratorCredentialsFunction;
         private readonly StationEui stationEui = StationEui.Parse("001122FFFEAABBCC");
         private const string RawStringContent = "hello";
         private const string Base64EncodedString = "aGVsbG8=";
 
         public ConcentratorCredentialTests()
         {
-            this.registryManager = new Mock<IDeviceRegistryManager>();
-            this.azureClientFactory = new Mock<IAzureClientFactory<BlobServiceClient>>();
-            this.concentratorCredential = new ConcentratorCredentialsFunction(registryManager.Object, azureClientFactory.Object, NullLogger<ConcentratorCredentialsFunction>.Instance);
+            registryManager = new Mock<IDeviceRegistryManager>();
+            //this.azureClientFactory = new Mock<IAzureClientFactory<BlobServiceClient>>();
+            blobServiceClient = new Mock<BlobServiceClient>();
+
+            blobStorageManager = AzureBlobStorageManager.CreateWithProvider(() =>
+                blobServiceClient.Object,
+                NullLogger<AzureBlobStorageManager>.Instance);
+
+            this.fetchConcentratorCredentialsFunction = new FetchConcentratorCredentialsFunction(
+                new LoraDeviceManagerImpl(
+                    registryManager.Object, 
+                    null, 
+                    blobStorageManager, 
+                    null, 
+                    null,
+                    NullLogger<LoraDeviceManagerImpl>.Instance),
+                new TestNoValidateTenantStrategy(),
+                NullLogger<FetchConcentratorCredentialsFunction>.Instance);
+
+            //this.fetchConcentratorCredentialsFunction = new FetchConcentratorCredentialsFunction(registryManager.Object, azureClientFactory.Object, NullLogger<FetchConcentratorCredentialsFunction>.Instance);
         }
 
         [Fact]
@@ -48,7 +68,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             using var blobStream = new MemoryStream(blobBytes);
             SetupBlobMock(blobStream);
 
-            var result = await this.concentratorCredential.GetBase64EncodedBlobAsync("https://storage.blob.core.windows.net/container/blobname", CancellationToken.None);
+            var result = await blobStorageManager.GetBase64EncodedBlobAsync("https://storage.blob.core.windows.net/container/blobname", CancellationToken.None);
 
             Assert.NotNull(result);
             Assert.Equal(Base64EncodedString, result);
@@ -71,7 +91,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(m => m.GetTwinAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                                 .Returns(Task.FromResult(twin));
 
-            var result = await this.concentratorCredential.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
+            var result = await this.fetchConcentratorCredentialsFunction.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
 
             Assert.NotNull(result);
             Assert.IsType<OkObjectResult>(result);
@@ -88,7 +108,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(m => m.GetTwinAsync("AnotherTwin", It.IsAny<CancellationToken>()))
                                 .Returns(Task.FromResult(twin));
 
-            var result = await this.concentratorCredential.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
+            var result = await this.fetchConcentratorCredentialsFunction.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
 
             Assert.NotNull(result);
             Assert.IsType<NotFoundResult>(result);
@@ -114,7 +134,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             var queryCollection = new QueryCollection(queryDictionary);
             httpRequest.SetupGet(x => x.Query).Returns(queryCollection);
 
-            var result = await this.concentratorCredential.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
+            var result = await this.fetchConcentratorCredentialsFunction.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
 
             Assert.NotNull(result);
             Assert.IsType<BadRequestObjectResult>(result);
@@ -136,33 +156,27 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(m => m.GetTwinAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                                 .ReturnsAsync(new IoTHubDeviceTwin(twin));
 
-            var actual = await this.concentratorCredential.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
+            var actual = await this.fetchConcentratorCredentialsFunction.RunFetchConcentratorCredentials(httpRequest.Object, CancellationToken.None);
 
             var result = Assert.IsType<ObjectResult>(actual);
             Assert.Equal(500, result.StatusCode);
-            Assert.Equal("'cups' desired property was not found or misconfigured.", result.Value);
+            Assert.Equal("failed to read (Parameter 'cups')", result.Value);
         }
 
         private void SetupBlobMock(MemoryStream blobStream)
         {
-            var blobServiceClient = new Mock<BlobServiceClient>();
-            var blobContainerClient = new Mock<BlobContainerClient>();
-            var blobContainerClientResponseMock = new Mock<Response>();
-
             var blobClient = new Mock<BlobClient>();
-            var blobClientResponseMock = new Mock<Response>();
-
             blobClient.Setup(m => m.OpenReadAsync(It.IsAny<BlobOpenReadOptions>(), It.IsAny<CancellationToken>()))
                       .Returns(Task.FromResult(blobStream as Stream));
 
-            blobServiceClient.Setup(m => m.GetBlobContainerClient(It.IsAny<string>()))
-                             .Returns(Response.FromValue(blobContainerClient.Object, blobContainerClientResponseMock.Object));
-
+            var blobContainerClient = new Mock<BlobContainerClient>();
+            var blobClientResponseMock = new Mock<Response>();
             blobContainerClient.Setup(m => m.GetBlobClient(It.IsAny<string>()))
                                .Returns(Response.FromValue(blobClient.Object, blobClientResponseMock.Object));
 
-            this.azureClientFactory.Setup(m => m.CreateClient(Globals.WebJobsStorageClientName))
-                                   .Returns(blobServiceClient.Object);
+            var blobContainerClientResponseMock = new Mock<Response>();
+            blobServiceClient.Setup(m => m.GetBlobContainerClient(It.IsAny<string>()))
+                             .Returns(Response.FromValue(blobContainerClient.Object, blobContainerClientResponseMock.Object));
         }
 
         private Mock<HttpRequest> SetupHttpRequest(ConcentratorCredentialType credentialType = ConcentratorCredentialType.Cups)

@@ -978,7 +978,10 @@ namespace LoRaWan.Tools.CLI.Helpers
             {
                 twin.Tags[DeviceTags.NetworkTagName] = opts.Network;
             }
-
+            if (opts.TenantId != null)
+            {
+                twin.Tags[DeviceTags.TenantIdName] = opts.TenantId;
+            }
             return twin;
         }
 
@@ -1064,6 +1067,10 @@ namespace LoRaWan.Tools.CLI.Helpers
             if (!string.IsNullOrEmpty(opts.Network))
             {
                 twin.Tags[DeviceTags.NetworkTagName] = opts.Network;
+            }
+            if (opts.TenantId != null)
+            {
+                twin.Tags[DeviceTags.TenantIdName] = opts.TenantId;
             }
 
             return twin;
@@ -1402,6 +1409,10 @@ namespace LoRaWan.Tools.CLI.Helpers
             var twin = new Twin();
             twin.Tags[DeviceTags.DeviceTypeTagName] = new string[] { DeviceTags.DeviceTypes.NetworkServer, DeviceTags.DeviceTypes.BasicsStation };
             twin.Tags[DeviceTags.NetworkTagName] = opts.Network;
+            if (opts.TenantId != null)
+            {
+                twin.Tags[DeviceTags.TenantIdName] = opts.TenantId;
+            }
 
             (var success, var result) = await ExecuteWithIotHubErrorHandlingAsync(() => configurationHelper.RegistryManager.AddDeviceWithTwinAsync(device, twin));
 

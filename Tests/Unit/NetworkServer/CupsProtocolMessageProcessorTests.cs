@@ -12,7 +12,8 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     using System.Text.Json;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::LoRaTools.CommonAPI;
+    using global::LoRaTools.BasicsStation.Processors;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.BasicsStation;
     using LoRaWan.NetworkServer.BasicsStation.Processors;
@@ -25,7 +26,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     public class CupsProtocolMessageProcessorTests
     {
         private readonly Mock<IBasicsStationConfigurationService> basicsStationConfigurationService;
-        private readonly Mock<LoRaDeviceAPIServiceBase> deviceAPIServiceBase;
+        private readonly Mock<LoraDeviceManagerServicesBase> deviceAPIServiceBase;
         private readonly Mock<ILogger<CupsProtocolMessageProcessor>> logger;
         private readonly CupsProtocolMessageProcessor processor;
 
@@ -40,7 +41,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         public CupsProtocolMessageProcessorTests()
         {
             this.basicsStationConfigurationService = new Mock<IBasicsStationConfigurationService>();
-            this.deviceAPIServiceBase = new Mock<LoRaDeviceAPIServiceBase>();
+            this.deviceAPIServiceBase = new Mock<LoraDeviceManagerServicesBase>();
             this.logger = new Mock<ILogger<CupsProtocolMessageProcessor>>();
             this.processor = new CupsProtocolMessageProcessor(this.basicsStationConfigurationService.Object,
                                                               this.deviceAPIServiceBase.Object,

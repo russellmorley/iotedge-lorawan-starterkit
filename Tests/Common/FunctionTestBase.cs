@@ -3,7 +3,7 @@
 
 namespace LoRaWan.Tests.Common
 {
-    using LoraKeysManagerFacade;
+    using LoRaTools.ADR;
     using System;
     using System.Collections.Generic;
     using System.Text;

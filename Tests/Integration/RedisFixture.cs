@@ -11,23 +11,40 @@ namespace LoRaWan.Tests.Integration
     using System.Threading.Tasks;
     using Docker.DotNet;
     using Docker.DotNet.Models;
-    using LoraKeysManagerFacade;
+    using LoraDeviceManager.Cache;
     using StackExchange.Redis;
     using Xunit;
+
+    public class RedisFixture : RedisImplFixture //GarnetImplFixture
+    {
+
+    }
+
+    public class GarnetImplFixture : RedisImplFixture
+    {
+        public GarnetImplFixture()
+        {
+            ImageName = "ghcr.io/microsoft/garnet";
+            ImageTag = "latest";
+        }
+    }
 
     /// <summary>
     /// Test fixture for tests using Redis.
     /// </summary>
-    public class RedisFixture : IAsyncLifetime
+    public class RedisImplFixture : IAsyncLifetime
     {
         public const string CollectionName = "rediscollection";
         private const string ContainerName = "redis";
-        private const string ImageName = "redis";
-        private const string ImageTag = "6.0-alpine";
+        // private const string ImageName = "redis";
+        //private const string ImageTag = "6.0-alpine";
         private const int RedisPort = 6001;
         private static readonly string TestContainerName = ContainerName + RedisPort;
 
         private string containerId;
+
+        public string ImageName { get; set; } = "redis";
+        public string ImageTag { get; set; } = "6.0-alpine";
 
         public IDatabase Database { get; set; }
         public ConnectionMultiplexer Redis { get; set; }

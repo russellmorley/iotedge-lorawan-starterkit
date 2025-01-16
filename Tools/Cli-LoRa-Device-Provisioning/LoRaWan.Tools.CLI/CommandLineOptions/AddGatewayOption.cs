@@ -14,6 +14,12 @@ namespace LoRaWan.Tools.CLI.Options
         internal const string DefaultAzureIotEdgeVersion = "1.4";
         internal const string DefaultLnsHostAddress = "ws://mylns:5000";
         internal const string DefaultNetwork = "quickstartnetwork";
+        internal const string DefaultLocalRedisConnnectionString = "";
+        internal const string DefaultLocalRedisModuleImage = "";
+        internal const string DefaultLocalRedisParamsEscapedJsonString = "";
+        internal const string DefaultTenantId = "";
+        internal const string DefaultTenantKey = "";
+
 
         [Option(
             "reset-pin",
@@ -120,5 +126,45 @@ namespace LoRaWan.Tools.CLI.Options
             HelpText = "LoRaWAN Starter Kit version"
         )]
         public string LoRaVersion { get; set; }
+
+        [Option(
+            "tenant-id",
+            Default = DefaultTenantId,
+            Required = false,
+            HelpText = "Tenant Id."
+        )]
+        public string TenantId { get; set; }
+
+        [Option(
+            "tenant-key",
+            Default = DefaultTenantKey,
+            Required = false,
+            HelpText = "Tenant Key."
+        )]
+        public string TenantKey { get; set; }
+
+        [Option(
+            "local-redis-connection-string",
+            Default = DefaultLocalRedisConnnectionString,
+            Required = false,
+            HelpText = "The connection string of the local redis instance, if running locally on iot gateway rather than centrally on azure"
+        )]
+        public string LocalRedisConnnectionString { get; set; }
+
+        [Option(
+            "local-redis-module-image",
+            Default = DefaultLocalRedisModuleImage,
+            Required = false,
+            HelpText = "The url of the local redis module image, if running locally on iot gateway rather than centrally on Azure"
+        )]
+        public string LocalRedisModuleImage { get; set; }
+
+        [Option(
+            "local-redis-params-escaped-jsonstring",
+            Default = DefaultLocalRedisParamsEscapedJsonString,
+            Required = false,
+            HelpText = "Additional params for the redis module image in escaped stringified json format, e.g. \"Ulimits\":[{\"memlock\":-1}] expressed as '\\\"Ulimits\\\":[{\\\"memlock\\\":-1}]'"
+        )]
+        public string LocalRedisParamsEscapedJsonString { get; set; }
     }
 }

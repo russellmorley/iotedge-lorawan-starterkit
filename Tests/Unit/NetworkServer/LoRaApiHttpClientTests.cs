@@ -4,7 +4,7 @@
 namespace LoRaWan.Tests.Unit.NetworkServer
 {
     using System.Net.Http;
-    using global::LoRaTools.CommonAPI;
+    using global::LoRaTools.Version;
     using LoRaWan.NetworkServer;
     using Microsoft.Extensions.DependencyInjection;
     using Xunit;

@@ -4,7 +4,7 @@
 namespace LoRaWan.NetworkServer
 {
     using System.Threading.Tasks;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Services;
 
     /// <summary>
     /// Defines a lora cloud device message received from the network server allowing it to be abandoned, rejected and completed.

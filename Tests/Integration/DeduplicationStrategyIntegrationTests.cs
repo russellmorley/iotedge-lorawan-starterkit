@@ -9,6 +9,8 @@ namespace LoRaWan.Tests.Integration
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using LoRaTools.FunctionBundler;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
@@ -139,7 +141,7 @@ namespace LoRaWan.Tests.Integration
 
             AsyncDisposableValue<MessageDispatcher> CreateMessageDispatcher(NetworkServerConfiguration networkServerConfiguration,
                                                                        ILoRaDeviceFrameCounterUpdateStrategyProvider frameCounterUpdateStrategyProvider,
-                                                                       LoRaDeviceAPIServiceBase loRaDeviceApi)
+                                                                       LoraDeviceManagerServicesBase loRaDeviceApi)
             {
 #pragma warning disable CA2000 // Dispose objects before losing scope (ownership transferred to caller)
                 var cache = EmptyMemoryCache();

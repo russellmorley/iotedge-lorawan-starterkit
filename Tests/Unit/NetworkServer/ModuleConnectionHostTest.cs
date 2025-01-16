@@ -5,8 +5,10 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 {
     using Bogus;
     using global::LoRaTools;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.BasicsStation.ModuleConnection;
+    using LoRaWan.NetworkServer.Services;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
     using Microsoft.Azure.Devices.Client.Exceptions;
@@ -27,7 +29,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         private readonly NetworkServerConfiguration networkServerConfiguration;
         private readonly Mock<ILoRaModuleClientFactory> loRaModuleClientFactory = new();
         private readonly Mock<ILoraModuleClient> loRaModuleClient = new();
-        private readonly LoRaDeviceAPIServiceBase loRaDeviceApiServiceBase = Mock.Of<LoRaDeviceAPIServiceBase>();
+        private readonly LoraDeviceManagerServicesBase loRaDeviceApiServiceBase = Mock.Of<LoraDeviceManagerServicesBase>();
         private readonly Faker faker = new Faker();
         private readonly Mock<ILnsRemoteCallHandler> lnsRemoteCall;
         private readonly ModuleConnectionHost subject;
@@ -100,7 +102,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
                 FacadeAuthCode = facadeCode
             };
 
-            var localLoRaDeviceApiServiceBase = new LoRaDeviceAPIService(networkServerConfiguration, Mock.Of<IHttpClientFactory>(), NullLogger<LoRaDeviceAPIService>.Instance, TestMeter.Instance);
+            var localLoRaDeviceApiServiceBase = new LoraDeviceManagerServicesProxy(networkServerConfiguration, Mock.Of<IHttpClientFactory>(), NullLogger<LoraDeviceManagerServicesProxy>.Instance, Mock.Of<ITenantValidationStrategy>(), TestMeter.Instance);
             await using var moduleClientFactory = new ModuleConnectionHost(networkServerConfiguration, this.loRaModuleClientFactory.Object, localLoRaDeviceApiServiceBase, this.lnsRemoteCall.Object, NullLogger<ModuleConnectionHost>.Instance, TestMeter.Instance);
 
             await moduleClientFactory.OnDesiredPropertiesUpdate(new TwinCollection(twinUpdate), null);

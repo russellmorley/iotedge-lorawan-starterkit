@@ -4,21 +4,22 @@
 namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
 {
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
-    using global::LoraKeysManagerFacade.FunctionBundler;
+    using global::LoRaTools.CacheStore;
+    using global::LoRaTools.FunctionBundler;
+    using LoraDeviceManager.FunctionBundler;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Logging.Abstractions;
     using Xunit;
 
     public class PreferredGatewayTest
     {
-        private readonly ILoRaDeviceCacheStore cache;
+        private readonly ICacheStore cacheStore;
         private readonly PreferredGatewayExecutionItem preferredGatewayExecutionItem;
 
         public PreferredGatewayTest()
         {
-            this.cache = new LoRaInMemoryDeviceStore();
-            this.preferredGatewayExecutionItem = new PreferredGatewayExecutionItem(this.cache, new NullLogger<PreferredGatewayExecutionItem>(), null);
+            this.cacheStore = new LoRaInMemoryDeviceStore();
+            this.preferredGatewayExecutionItem = new PreferredGatewayExecutionItem(this.cacheStore, new NullLogger<PreferredGatewayExecutionItem>(), null);
         }
 
         [Fact]

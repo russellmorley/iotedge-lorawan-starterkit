@@ -10,5 +10,7 @@ namespace LoRaTools
         public const string PreferredGatewayID = "PreferredGatewayID";
         public const string DevAddr = "DevAddr";
         public const string NwkSKey = "NwkSKey";
+        public const string TenantIdName = "tenantid";
+        public const string TenantKeyName = "tenantkey";
     }
 }

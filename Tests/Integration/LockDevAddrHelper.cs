@@ -3,7 +3,8 @@
 
 namespace LoRaWan.Tests.Integration
 {
-    using LoraKeysManagerFacade;
+    using LoraDeviceManager.Cache;
+    using LoRaTools.CacheStore;
     using System;
     using System.Threading.Tasks;
 
@@ -12,29 +13,29 @@ namespace LoRaWan.Tests.Integration
         private const string FullUpdateKey = "fullUpdateKey";
         private const string GlobalDevAddrUpdateKey = "globalUpdateKey";
 
-        public static async Task TakeLocksAsync(ILoRaDeviceCacheStore loRaDeviceCache, string[] lockNames)
+        public static async Task TakeLocksAsync(ICacheStore cacheStore, string[] lockNames)
         {
             if (lockNames?.Length > 0)
             {
                 foreach (var locks in lockNames)
                 {
-                    await loRaDeviceCache.LockTakeAsync(locks, locks, TimeSpan.FromMinutes(3));
+                    await cacheStore.LockTakeAsync(locks, locks, TimeSpan.FromMinutes(3));
                 }
             }
         }
 
-        public static void ReleaseAllLocks(ILoRaDeviceCacheStore loRaDeviceCache)
+        public static void ReleaseAllLocks(ICacheStore cacheStore)
         {
-            loRaDeviceCache.KeyDelete(GlobalDevAddrUpdateKey);
-            loRaDeviceCache.KeyDelete(FullUpdateKey);
+            cacheStore.KeyDelete(GlobalDevAddrUpdateKey);
+            cacheStore.KeyDelete(FullUpdateKey);
         }
 
-        public static async Task PrepareLocksForTests(ILoRaDeviceCacheStore loRaDeviceCache, string[] locksGuideTest = null)
+        public static async Task PrepareLocksForTests(ICacheStore cacheStore, string[] locksGuideTest = null)
         {
-            LockDevAddrHelper.ReleaseAllLocks(loRaDeviceCache);
-            await LockDevAddrHelper.TakeLocksAsync(loRaDeviceCache, locksGuideTest);
+            LockDevAddrHelper.ReleaseAllLocks(cacheStore);
+            await LockDevAddrHelper.TakeLocksAsync(cacheStore, locksGuideTest);
         }
 
-        public static DevAddrCacheInfo GetCachedDevAddr(ILoRaDeviceCacheStore loRaDeviceCache, string key) => loRaDeviceCache.GetObject<DevAddrCacheInfo>(key);
+        public static DevAddrCacheInfo GetCachedDevAddr(ICacheStore cacheStore, string key) => cacheStore.GetObject<DevAddrCacheInfo>(key);
     }
 }

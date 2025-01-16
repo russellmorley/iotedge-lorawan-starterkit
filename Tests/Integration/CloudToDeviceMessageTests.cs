@@ -9,7 +9,9 @@ namespace LoRaWan.Tests.Integration
     using System.Threading;
     using System.Threading.Tasks;
     using LoRaTools;
+    using LoRaTools.FunctionBundler;
     using LoRaTools.LoRaMessage;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
@@ -19,7 +21,6 @@ namespace LoRaWan.Tests.Integration
     using Xunit;
     using Xunit.Abstractions;
     using static LoRaWan.ReceiveWindowNumber;
-    using IoTHubDeviceInfo = NetworkServer.IoTHubDeviceInfo;
 
     // End to end tests without external dependencies (IoT Hub, Service Facade Function)
     // Cloud to device message processing tests (Join tests are handled in other class)
@@ -347,7 +348,7 @@ namespace LoRaWan.Tests.Integration
                 .ReturnsAsync(true);
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEUI, "adad").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEUI, "adad").AsList()));
 
             using var cache = NewMemoryCache();
             await using var loRaDeviceRegistry = new LoRaDeviceRegistry(ServerConfiguration, cache, LoRaDeviceApi.Object, LoRaDeviceFactory, DeviceCache);
@@ -433,7 +434,7 @@ namespace LoRaWan.Tests.Integration
                 .ReturnsAsync(true);
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEUI, "adad").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEUI, "adad").AsList()));
 
             using var cache = NewMemoryCache();
             await using var loRaDeviceRegistry = new LoRaDeviceRegistry(ServerConfiguration, cache, LoRaDeviceApi.Object, LoRaDeviceFactory, DeviceCache);
@@ -521,7 +522,7 @@ namespace LoRaWan.Tests.Integration
                 .ReturnsAsync(true);
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEUI, "adad").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEUI, "adad").AsList()));
 
             using var cache = NewMemoryCache();
             await using var loRaDeviceRegistry = new LoRaDeviceRegistry(ServerConfiguration, cache, LoRaDeviceApi.Object, LoRaDeviceFactory, DeviceCache);
@@ -945,7 +946,7 @@ namespace LoRaWan.Tests.Integration
                 .ReturnsAsync(true);
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEUI, "adad").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEUI, "adad").AsList()));
 
             using var cache = NewMemoryCache();
             await using var loRaDeviceRegistry = new LoRaDeviceRegistry(ServerConfiguration, cache, LoRaDeviceApi.Object, LoRaDeviceFactory, DeviceCache);

@@ -5,6 +5,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 {
     using System.Threading;
     using System.Threading.Tasks;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -78,7 +79,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             factory.Verify(x => x.CreateAndRegisterAsync(defaultDeviceInfo, It.IsAny<CancellationToken>()), Times.Once);
         }
 
-        private readonly IoTHubDeviceInfo defaultDeviceInfo = new()
+        private readonly IoTHubDeviceServiceInfo defaultDeviceInfo = new()
         {
             DevEUI = new DevEui(0),
             PrimaryKey = "AAAA",

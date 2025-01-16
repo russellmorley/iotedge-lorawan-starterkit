@@ -24,6 +24,18 @@ namespace LoRaTools.IoTHubImpl
 
         public string DeviceId => this.TwinInstance.DeviceId;
 
+        public string GetTag(string tag)
+        {
+            try
+            {
+                return Convert.ToString(this.TwinInstance.Tags[tag]);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return string.Empty;
+            }
+        }
+
         public override bool Equals(object obj)
         {
             ArgumentNullException.ThrowIfNull(obj, nameof(obj));

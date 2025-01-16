@@ -8,6 +8,7 @@ namespace LoRaWan.Tools.CLI
         internal const string NetworkTagName = "network";
         internal const string RegionTagName = "lora_region";
         internal const string DeviceTypeTagName = "lora_device_type";
+        internal const string TenantIdName = "tenantid";
 
         internal static class DeviceTypes
         {

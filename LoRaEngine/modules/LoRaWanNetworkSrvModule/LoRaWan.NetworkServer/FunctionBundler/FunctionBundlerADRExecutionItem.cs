@@ -3,8 +3,8 @@
 
 namespace LoRaWan.NetworkServer
 {
-    using LoRaTools.CommonAPI;
-    using LoRaWan.NetworkServer.ADR;
+    using LoRaTools.ADR;
+    using LoRaTools.FunctionBundler;
     using System;
 
     public class FunctionBundlerADRExecutionItem : IFunctionBundlerExecutionItem

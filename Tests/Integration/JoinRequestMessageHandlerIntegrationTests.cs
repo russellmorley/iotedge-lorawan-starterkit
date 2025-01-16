@@ -6,8 +6,8 @@ namespace LoRaWan.Tests.Integration
     using System.Threading;
     using System.Threading.Tasks;
     using Common;
-    using LoRaTools.CommonAPI;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using Microsoft.Azure.Devices.Shared;
     using Microsoft.Extensions.Caching.Memory;
@@ -19,7 +19,7 @@ namespace LoRaWan.Tests.Integration
     public sealed class JoinRequestMessageHandlerIntegrationTests : MessageProcessorTestBase
     {
         private readonly MemoryCache cache;
-        private readonly Mock<LoRaDeviceAPIServiceBase> apiServiceMock;
+        private readonly Mock<LoraDeviceManagerServicesBase> apiServiceMock;
         private readonly JoinRequestMessageHandler joinRequestHandler;
         private readonly SimulatedDevice simulatedDevice;
         private readonly Mock<LoRaDevice> deviceMock;
@@ -53,7 +53,7 @@ namespace LoRaWan.Tests.Integration
             _ = this.clientMock.Setup(x => x.UpdateReportedPropertiesAsync(It.IsAny<TwinCollection>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
             ConnectionManager.Register(this.deviceMock.Object, this.clientMock.Object);
 
-            this.apiServiceMock = new Mock<LoRaDeviceAPIServiceBase>();
+            this.apiServiceMock = new Mock<LoraDeviceManagerServicesBase>();
 
             this.joinRequestHandler = new JoinRequestMessageHandler(
                 ServerConfiguration,

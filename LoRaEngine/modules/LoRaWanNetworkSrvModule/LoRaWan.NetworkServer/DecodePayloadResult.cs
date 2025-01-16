@@ -3,7 +3,7 @@
 
 namespace LoRaWan.NetworkServer
 {
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Services;
     using Newtonsoft.Json;
 
     /// <summary>

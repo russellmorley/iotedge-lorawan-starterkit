@@ -57,10 +57,12 @@
               "LOG_LEVEL": {
                 "value": "2"
               }
+              ["$local_redis_connection_string"]
             },
             "status": "running",
             "restartPolicy": "always"
           },
+          ["$local_redis_module"]
           "LoRaBasicsStationModule": {
             "type": "docker",
             "settings": {
@@ -101,6 +103,8 @@
         "FacadeAuthCode": "[$TWIN_FACADE_AUTH_CODE]",
         "hostAddress": "[$TWIN_HOST_ADDRESS]",
         "network": "[$TWIN_NETWORK]"
+        ["$tenant_id"]
+        ["$tenant_key"]
       }
     }
   }

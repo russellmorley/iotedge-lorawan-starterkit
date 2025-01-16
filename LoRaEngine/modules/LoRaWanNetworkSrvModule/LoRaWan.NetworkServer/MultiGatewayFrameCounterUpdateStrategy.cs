@@ -3,6 +3,7 @@
 
 namespace LoRaWan.NetworkServer
 {
+    using LoRaTools.Services;
     using System.Threading.Tasks;
 
     // Frame counter strategy for multi gateway scenarios
@@ -10,9 +11,9 @@ namespace LoRaWan.NetworkServer
     public class MultiGatewayFrameCounterUpdateStrategy : ILoRaDeviceFrameCounterUpdateStrategy
     {
         private readonly string gatewayID;
-        private readonly LoRaDeviceAPIServiceBase loRaDeviceAPIService;
+        private readonly LoraDeviceManagerServicesBase loRaDeviceAPIService;
 
-        public MultiGatewayFrameCounterUpdateStrategy(string gatewayID, LoRaDeviceAPIServiceBase loRaDeviceAPIService)
+        public MultiGatewayFrameCounterUpdateStrategy(string gatewayID, LoraDeviceManagerServicesBase loRaDeviceAPIService)
         {
             this.gatewayID = gatewayID;
             this.loRaDeviceAPIService = loRaDeviceAPIService;

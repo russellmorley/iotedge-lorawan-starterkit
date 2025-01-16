@@ -7,10 +7,14 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
-    using global::LoraKeysManagerFacade.FunctionBundler;
     using global::LoRaTools.ADR;
-    using global::LoRaTools.CommonAPI;
+    using global::LoRaTools.ChannelPublisher;
+    using global::LoRaTools.EdgeDeviceGetter;
+    using global::LoRaTools.FunctionBundler;
+    using global::LoRaTools.ServiceClient;
+    using LoraDeviceManager;
+    using LoraDeviceManager.ADR;
+    using LoraDeviceManager.FunctionBundler;
     using LoRaWan.Tests.Common;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -21,7 +25,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
     {
         private readonly LoRaADRInMemoryStore adrStore;
         private readonly ILoRaADRManager adrManager;
-        private readonly FunctionBundlerFunction functionBundler;
+        private readonly ILoraDeviceManager loraDeviceManager;
         private readonly ADRExecutionItem adrExecutionItem;
         private readonly TelemetryConfiguration telemetryConfiguration;
         private readonly Random rnd = new Random();
@@ -56,6 +60,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             this.adrExecutionItem = new ADRExecutionItem(this.adrManager);
 
             this.telemetryConfiguration = new TelemetryConfiguration();
+
             var items = new IFunctionBundlerExecutionItem[]
             {
                 new DeduplicationExecutionItem(cacheStore,
@@ -64,12 +69,13 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
                                                Mock.Of<IChannelPublisher>(),
                                                this.telemetryConfiguration),
                 this.adrExecutionItem,
-                new NextFCntDownExecutionItem(new FCntCacheCheck(cacheStore, NullLogger<FCntCacheCheck>.Instance)),
+                new NextFCntDownExecutionItem(new LoraDeviceManagerImpl(null, cacheStore, null, null, null, NullLogger<LoraDeviceManagerImpl>.Instance)),
                 new PreferredGatewayExecutionItem(cacheStore, new NullLogger<PreferredGatewayExecutionItem>(), null),
             };
 
-            this.functionBundler = new FunctionBundlerFunction(items, NullLogger<FunctionBundlerFunction>.Instance);
+            this.loraDeviceManager = new LoraDeviceManagerImpl(null, null, null, null, items, NullLogger<LoraDeviceManagerImpl>.Instance);
         }
+
 
         [Fact]
         public async Task FunctionBundler_All_Functions()
@@ -79,7 +85,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
 
             var req = CreateStandardBundlerRequest(gatewayId1);
 
-            var resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            var resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
             Assert.NotNull(resp);
             Assert.NotNull(resp.AdrResult);
             Assert.False(resp.AdrResult.CanConfirmToDevice);
@@ -102,7 +108,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             req.AdrRequest = null;
             req.FunctionItems = FunctionBundlerItemType.FCntDown;
 
-            var resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            var resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
             Assert.NotNull(resp);
             Assert.Null(resp.AdrResult);
 
@@ -121,7 +127,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             req.AdrRequest = null;
             req.FunctionItems = FunctionBundlerItemType.Deduplication;
 
-            var resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            var resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
             Assert.NotNull(resp);
             Assert.Null(resp.AdrResult);
 
@@ -142,7 +148,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
 
             req.FunctionItems = FunctionBundlerItemType.ADR;
 
-            var resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            var resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
             Assert.NotNull(resp);
             Assert.NotNull(resp.AdrResult);
             Assert.True(resp.AdrResult.CanConfirmToDevice);
@@ -167,7 +173,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             req.FunctionItems = FunctionBundlerItemType.ADR | FunctionBundlerItemType.Deduplication;
             req2.FunctionItems = FunctionBundlerItemType.ADR | FunctionBundlerItemType.Deduplication;
 
-            var resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            var resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
             Assert.NotNull(resp);
             Assert.NotNull(resp.AdrResult);
             Assert.False(resp.AdrResult.CanConfirmToDevice);
@@ -185,7 +191,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             await PrepareADRFrames(devEUI, LoRaADRTable.FrameCountCaptureCount - 1, req.AdrRequest);
             req.ClientFCntUp = req.AdrRequest.FCntUp;
 
-            resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
 
             Assert.NotNull(resp);
             Assert.NotNull(resp.AdrResult);
@@ -200,7 +206,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             req.AdrRequest.FCntUp = req2.AdrRequest.FCntUp = req2.ClientFCntUp = ++req.ClientFCntUp;
             req.AdrRequest.FCntDown = req2.AdrRequest.FCntDown = req2.ClientFCntDown = req.ClientFCntDown = resp.NextFCntDown.GetValueOrDefault();
 
-            resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
             Assert.NotNull(resp);
             Assert.NotNull(resp.AdrResult);
 
@@ -210,7 +216,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
 
             Assert.True(resp.AdrResult.CanConfirmToDevice || resp.NextFCntDown == null);
 
-            resp = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req2);
+            resp = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req2);
             Assert.NotNull(resp);
             Assert.NotNull(resp.AdrResult);
             Assert.True(resp.AdrResult.CanConfirmToDevice || resp.NextFCntDown == null);
@@ -275,7 +281,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
 
         private async Task<FunctionBundlerResult> ExecuteRequest(DevEui devEUI, FunctionBundlerRequest req)
         {
-            var result = await this.functionBundler.HandleFunctionBundlerInvoke(devEUI, req);
+            var result = await loraDeviceManager.ExecuteFunctionBundlerAsync(devEUI, req);
             lock (req)
             {
                 req.ClientFCntUp++;
@@ -349,7 +355,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
                                                Mock.Of<IChannelPublisher>(),
                                                this.telemetryConfiguration),
                 new ADRExecutionItem(this.adrManager),
-                new NextFCntDownExecutionItem(new FCntCacheCheck(cacheStore, NullLogger<FCntCacheCheck>.Instance)),
+                new NextFCntDownExecutionItem(new LoraDeviceManagerImpl(null, cacheStore, null, null, null,NullLogger<LoraDeviceManagerImpl>.Instance)),
                 new PreferredGatewayExecutionItem(cacheStore, new NullLogger<PreferredGatewayExecutionItem>(), null),
             };
 

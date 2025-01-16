@@ -7,7 +7,7 @@ namespace LoRaWan.Tests.Simulation
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Services;
     using LoRaWan.Tests.Common;
     using Newtonsoft.Json;
     using Xunit;
@@ -15,9 +15,7 @@ namespace LoRaWan.Tests.Simulation
     using static MoreLinq.Extensions.RepeatExtension;
 
     [Trait("Category", "SkipWhenLiveUnitTesting")]
-#pragma warning disable xUnit1033 // False positive: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
     public sealed class SimulatedCloudTests : IntegrationTestBaseSim, IAsyncLifetime
-#pragma warning restore xUnit1033 // False positive: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
     {
         private readonly List<SimulatedBasicsStation> simulatedBasicsStations;
         /// <summary>

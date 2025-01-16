@@ -10,8 +10,8 @@ namespace LoRaWan.Tests.Common
     using System.Text;
     using System.Threading.Tasks;
     using LoRaTools;
-    using LoRaTools.CommonAPI;
     using LoRaTools.IoTHubImpl;
+    using LoRaTools.Services;
     using LoRaTools.Utils;
     using LoRaWan.NetworkServer.BasicsStation;
     using Microsoft.Azure.Devices;

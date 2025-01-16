@@ -3,7 +3,8 @@
 
 namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
 {
-    using global::LoraKeysManagerFacade;
+    using global::LoraKeysManagerFacade.LoraDeviceManagerServices;
+    using LoraDeviceManager;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Logging.Abstractions;
     using System.Threading.Tasks;
@@ -11,11 +12,23 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
 
     public class FCntCacheCheckTest : FunctionTestBase
     {
-        private readonly FCntCacheCheck fcntCheck;
+        private readonly NextFCntDownFunction nextFCntDownFunction;
+        private readonly ILoraDeviceManager loraDeviceManager;
 
         public FCntCacheCheckTest()
         {
-            this.fcntCheck = new FCntCacheCheck(new LoRaInMemoryDeviceStore(), NullLogger<FCntCacheCheck>.Instance);
+            this.loraDeviceManager = new LoraDeviceManagerImpl(
+                    null,
+                    new LoRaInMemoryDeviceStore(),
+                    null,
+                    null,
+                    null,
+                    NullLogger<LoraDeviceManagerImpl>.Instance);
+
+            this.nextFCntDownFunction = new NextFCntDownFunction(
+                loraDeviceManager,
+                NullLogger<NextFCntDownFunction>.Instance,
+                new TestNoValidateTenantStrategy());
         }
 
         [Fact]
@@ -24,7 +37,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             var deviceEUI = TestEui.GenerateDevEui();
             var gatewayId = NewUniqueEUI64();
 
-            var next = await this.fcntCheck.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
+            var next = await loraDeviceManager.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
             Assert.Equal(2U, next);
         }
 
@@ -34,10 +47,10 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             var deviceEUI = TestEui.GenerateDevEui();
             var gatewayId = NewUniqueEUI64();
 
-            var next = await this.fcntCheck.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
+            var next = await loraDeviceManager.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
             Assert.Equal(2U, next);
 
-            next = await this.fcntCheck.GetNextFCntDownAsync(deviceEUI, gatewayId, 2, 1);
+            next = await loraDeviceManager.GetNextFCntDownAsync(deviceEUI, gatewayId, 2, 1);
             Assert.Equal(3U, next);
         }
 
@@ -47,10 +60,10 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             var deviceEUI = TestEui.GenerateDevEui();
             var gatewayId = NewUniqueEUI64();
 
-            var next = await this.fcntCheck.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
+            var next = await loraDeviceManager.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
             Assert.Equal(2U, next);
 
-            next = await this.fcntCheck.GetNextFCntDownAsync(deviceEUI, gatewayId, 3, 10);
+            next = await loraDeviceManager.GetNextFCntDownAsync(deviceEUI, gatewayId, 3, 10);
             Assert.Equal(11U, next);
         }
 
@@ -60,10 +73,10 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             var deviceEUI = TestEui.GenerateDevEui();
             var gatewayId = NewUniqueEUI64();
 
-            var next = await this.fcntCheck.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
+            var next = await loraDeviceManager.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
             Assert.Equal(2U, next);
 
-            next = await this.fcntCheck.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
+            next = await loraDeviceManager.GetNextFCntDownAsync(deviceEUI, gatewayId, 1, 1);
             Assert.Equal(3U, next);
         }
     }

@@ -5,6 +5,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 {
     using System.Globalization;
     using System.Linq;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using Xunit;
 
@@ -60,9 +61,9 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             Assert.Empty(new SearchDevicesResult());
         }
 
-        private static IoTHubDeviceInfo[] GenerateIoTHubDeviceInfo(int number) =>
+        private static IoTHubDeviceServiceInfo[] GenerateIoTHubDeviceInfo(int number) =>
             Enumerable.Range(1, number)
-                      .Select(i => new IoTHubDeviceInfo
+                      .Select(i => new IoTHubDeviceServiceInfo
                       {
                           PrimaryKey = i.ToString(CultureInfo.InvariantCulture),
                           DevEUI = new DevEui(checked((ulong)i)),

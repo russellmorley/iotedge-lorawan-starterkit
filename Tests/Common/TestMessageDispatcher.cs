@@ -3,6 +3,7 @@
 
 namespace LoRaWan.Tests.Common
 {
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -20,7 +21,7 @@ namespace LoRaWan.Tests.Common
             return new MessageDispatcher(configuration,
                                          deviceRegistry,
                                          frameCounterUpdateStrategyProvider,
-                                         new JoinRequestMessageHandler(configuration, concentratorDeduplication, deviceRegistry, NullLogger<JoinRequestMessageHandler>.Instance, Mock.Of<LoRaDeviceAPIServiceBase>(), null),
+                                         new JoinRequestMessageHandler(configuration, concentratorDeduplication, deviceRegistry, NullLogger<JoinRequestMessageHandler>.Instance, Mock.Of<LoraDeviceManagerServicesBase>(), null),
                                          NullLoggerFactory.Instance,
                                          NullLogger<MessageDispatcher>.Instance,
                                          null);

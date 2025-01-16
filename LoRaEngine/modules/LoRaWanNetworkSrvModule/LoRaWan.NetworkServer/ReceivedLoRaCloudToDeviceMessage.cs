@@ -6,7 +6,7 @@ namespace LoRaWan.NetworkServer
     using System;
     using System.Text;
     using System.Threading.Tasks;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Services;
 
     /// <summary>
     /// Defines a <see cref="LoRaCloudToDeviceMessage"/> that was received by the network server allowing it to abandon, reject and complete.

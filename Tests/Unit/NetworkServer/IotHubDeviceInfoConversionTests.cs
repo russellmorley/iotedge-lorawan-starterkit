@@ -5,7 +5,7 @@
 
 namespace LoRaWan.Tests.Unit.NetworkServer
 {
-    using global::LoraKeysManagerFacade;
+    using LoraDeviceManager.Cache;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using Xunit;
@@ -36,7 +36,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             var original = new IoTHubDeviceInfo { DevAddr = new DevAddr(123), DevEUI = new DevEui(234), PrimaryKey = "someprimarykey" };
 
             // act
-            var result = JsonConvert.DeserializeObject<LoRaWan.NetworkServer.IoTHubDeviceInfo>(JsonConvert.SerializeObject(original));
+            var result = JsonConvert.DeserializeObject<global::LoRaTools.Services.IoTHubDeviceServiceInfo>(JsonConvert.SerializeObject(original));
 
             // assert
             Assert.NotNull(result);

@@ -12,7 +12,6 @@
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="morelinq" Version="4.3.0" />
     <PackageReference Include="RichardSzalay.MockHttp" Version="7.0.0" />
-    <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="Xunit.Combinatorial" Version="1.6.24" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
@@ -25,7 +24,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\LoRaEngine\modules\LoRaWanNetworkSrvModule\LoRaWan\LoRaWan.csproj" />
     <ProjectReference Include="..\Common\LoRaWan.Tests.Common.csproj" />
   </ItemGroup>
 </Project>

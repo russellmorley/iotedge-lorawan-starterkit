@@ -9,8 +9,8 @@ namespace LoRaWan.Tests.Common
     using System.IO;
     using System.Linq;
     using System.Text;
-    using LoRaTools.CommonAPI;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.BasicsStation;
     using Microsoft.Azure.Devices.Client;

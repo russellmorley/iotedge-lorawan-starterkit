@@ -5,6 +5,7 @@ namespace LoRaWan.Tests.Integration
 {
     using System;
     using System.Threading.Tasks;
+    using LoRaTools.FunctionBundler;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;

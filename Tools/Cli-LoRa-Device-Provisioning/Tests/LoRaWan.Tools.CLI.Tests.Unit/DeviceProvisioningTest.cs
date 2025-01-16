@@ -23,6 +23,7 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
         private const string Decoder = "DecoderValueSensor";
         private const string LoRaVersion = "999.999.10"; // using an non-existing version to ensure it is not hardcoded with a valid value
         private const string IotEdgeVersion = "1.4";
+        private const string TenantId = "12345";
 
         // OTAA Properties
         private static readonly string AppKey = GetRandomHexNumber(32);
@@ -32,6 +33,7 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
         private static readonly string AppSKey = GetRandomHexNumber(32);
         private static readonly string NwkSKey = GetRandomHexNumber(32);
         private const string DevAddr = "027AEC7B";
+
         public static string GetRandomHexNumber(int digits)
         {
             return string.Concat(Enumerable.Range(0, digits).Select(_ => Random.Next(16).ToString("X", CultureInfo.InvariantCulture)));
@@ -125,9 +127,12 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
         }
 
         [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task AddOTAADevice(bool deviceExistsInRegistry)
+        [InlineData(true, true)]
+        [InlineData(true, false)]
+        [InlineData(false, true)]
+        [InlineData(false, false)]
+
+        public async Task AddOTAADevice(bool deviceExistsInRegistry, bool includeTenantId)
         {
             // Arrange            
             var savedTwin = new Twin();
@@ -143,6 +148,10 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
                     Assert.Equal(AppEui, t.Properties.Desired[TwinProperty.AppEUI].ToString());
                     Assert.Equal(Decoder, t.Properties.Desired[TwinProperty.SensorDecoder].ToString());
                     Assert.Equal(string.Empty, t.Properties.Desired[TwinProperty.GatewayID].ToString());
+                    if (includeTenantId)
+                        Assert.Equal(TenantId, (string)t.Tags["tenantid"]);
+                    else
+                        Assert.Equal(string.Empty, (string)t.Tags["tenantid"]);
                     savedTwin = t;
                 })
                 .ReturnsAsync(new BulkRegistryOperationResult
@@ -163,7 +172,7 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
             }
 
             // Act
-            var args = CreateArgs($"add --type otaa --deveui {DevEUI} --appeui {AppEui} --appkey {AppKey}  --decoder {Decoder} --network {NetworkName}");
+            var args = CreateArgs($"add --type otaa --deveui {DevEUI} --appeui {AppEui} --appkey {AppKey}  --decoder {Decoder} --network {NetworkName} {(includeTenantId ? $"--tenant-id {TenantId}" : string.Empty)}");
             var actual = await Program.Run(args, this.configurationHelper);
 
             // Assert
@@ -234,7 +243,7 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
             var actualSpiSpeed = 2;
 
             // Act
-            var args = CreateArgs($"add-gateway --reset-pin {resetPin} --device-id {deviceId} --spi-dev {spiDev} --spi-speed {spiSpeed} --api-url {facadeURL} --api-key {facadeAuthCode} --lns-host-address {lnsHostAddress} --network {networkId} --lora-version {LoRaVersion}");
+            var args = CreateArgs($"add-gateway --reset-pin {resetPin} --device-id {deviceId} --spi-dev {spiDev} --spi-speed {spiSpeed} --api-url {facadeURL} --api-key {facadeAuthCode} --lns-host-address {lnsHostAddress} --network {networkId} --lora-version {LoRaVersion} --tenant-id {TenantId}");
             var actual = await Program.Run(args, this.configurationHelper);
 
             // Assert
@@ -246,9 +255,51 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
             this.registryManager.Verify(x => x.AddConfigurationAsync(It.IsNotNull<Configuration>()), Times.Never);
 
             var actualConfigurationJson = JsonConvert.SerializeObject(actualConfiguration);
-            var expectedConfigurationJson = $"{{\"modulesContent\":{{\"$edgeAgent\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"runtime\":{{\"type\":\"docker\",\"settings\":{{\"loggingOptions\":\"\",\"minDockerVersion\":\"v1.25\"}}}},\"systemModules\":{{\"edgeAgent\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-agent:{IotEdgeVersion}\",\"createOptions\":\"{{}}\"}}}},\"edgeHub\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-hub:{IotEdgeVersion}\",\"createOptions\":\"{{ \\\"HostConfig\\\": {{   \\\"PortBindings\\\": {{\\\"8883/tcp\\\": [  {{\\\"HostPort\\\": \\\"8883\\\" }}  ], \\\"443/tcp\\\": [ {{ \\\"HostPort\\\": \\\"443\\\" }} ], \\\"5671/tcp\\\": [ {{ \\\"HostPort\\\": \\\"5671\\\"  }}] }} }}}}\"}},\"env\":{{\"OptimizeForPerformance\":{{\"value\":\"false\"}},\"mqttSettings__enabled\":{{\"value\":\"false\"}},\"AuthenticationMode\":{{\"value\":\"CloudAndScope\"}},\"NestedEdgeEnabled\":{{\"value\":\"false\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}}}},\"modules\":{{\"LoRaWanNetworkSrvModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorawannetworksrvmodule:{LoRaVersion}\",\"createOptions\":\"{{\\\"ExposedPorts\\\": {{ \\\"5000/tcp\\\": {{}}}}, \\\"HostConfig\\\": {{  \\\"PortBindings\\\": {{\\\"5000/tcp\\\": [  {{ \\\"HostPort\\\": \\\"5000\\\", \\\"HostIp\\\":\\\"172.17.0.1\\\" }} ]}}}}}}\"}},\"version\":\"1.0\",\"env\":{{\"ENABLE_GATEWAY\":{{\"value\":\"true\"}},\"LOG_LEVEL\":{{\"value\":\"2\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}},\"LoRaBasicsStationModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorabasicsstationmodule:{LoRaVersion}\",\"createOptions\":\"  {{\\\"HostConfig\\\": {{\\\"NetworkMode\\\": \\\"host\\\", \\\"Privileged\\\": true }},  \\\"NetworkingConfig\\\": {{\\\"EndpointsConfig\\\": {{\\\"host\\\": {{}} }}}}}}\"}},\"env\":{{\"RESET_PIN\":{{\"value\":\"{resetPin}\"}},\"TC_URI\":{{\"value\":\"ws://172.17.0.1:5000\"}},\"SPI_DEV\":{{\"value\":\"{spiDev}\"}},\"SPI_SPEED\":{{\"value\":\"{actualSpiSpeed}\"}}}},\"version\":\"1.0\",\"status\":\"running\",\"restartPolicy\":\"always\"}}}}}}}},\"$edgeHub\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"routes\":{{\"route\":\"FROM /* INTO $upstream\"}},\"storeAndForwardConfiguration\":{{\"timeToLiveSecs\":7200}}}}}},\"LoRaWanNetworkSrvModule\":{{\"properties.desired\":{{\"FacadeServerUrl\":\"{facadeURL}\",\"FacadeAuthCode\":\"{facadeAuthCode}\",\"hostAddress\":\"{lnsHostAddress}\",\"network\":\"{networkId}\"}}}}}},\"moduleContent\":{{}},\"deviceContent\":{{}}}}";
+            var expectedConfigurationJson = $"{{\"modulesContent\":{{\"$edgeAgent\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"runtime\":{{\"type\":\"docker\",\"settings\":{{\"loggingOptions\":\"\",\"minDockerVersion\":\"v1.25\"}}}},\"systemModules\":{{\"edgeAgent\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-agent:{IotEdgeVersion}\",\"createOptions\":\"{{}}\"}}}},\"edgeHub\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-hub:{IotEdgeVersion}\",\"createOptions\":\"{{ \\\"HostConfig\\\": {{   \\\"PortBindings\\\": {{\\\"8883/tcp\\\": [  {{\\\"HostPort\\\": \\\"8883\\\" }}  ], \\\"443/tcp\\\": [ {{ \\\"HostPort\\\": \\\"443\\\" }} ], \\\"5671/tcp\\\": [ {{ \\\"HostPort\\\": \\\"5671\\\"  }}] }} }}}}\"}},\"env\":{{\"OptimizeForPerformance\":{{\"value\":\"false\"}},\"mqttSettings__enabled\":{{\"value\":\"false\"}},\"AuthenticationMode\":{{\"value\":\"CloudAndScope\"}},\"NestedEdgeEnabled\":{{\"value\":\"false\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}}}},\"modules\":{{\"LoRaWanNetworkSrvModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorawannetworksrvmodule:{LoRaVersion}\",\"createOptions\":\"{{\\\"ExposedPorts\\\": {{ \\\"5000/tcp\\\": {{}}}}, \\\"HostConfig\\\": {{  \\\"PortBindings\\\": {{\\\"5000/tcp\\\": [  {{ \\\"HostPort\\\": \\\"5000\\\", \\\"HostIp\\\":\\\"172.17.0.1\\\" }} ]}}}}}}\"}},\"version\":\"1.0\",\"env\":{{\"ENABLE_GATEWAY\":{{\"value\":\"true\"}},\"LOG_LEVEL\":{{\"value\":\"2\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}},\"LoRaBasicsStationModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorabasicsstationmodule:{LoRaVersion}\",\"createOptions\":\"  {{\\\"HostConfig\\\": {{\\\"NetworkMode\\\": \\\"host\\\", \\\"Privileged\\\": true }},  \\\"NetworkingConfig\\\": {{\\\"EndpointsConfig\\\": {{\\\"host\\\": {{}} }}}}}}\"}},\"env\":{{\"RESET_PIN\":{{\"value\":\"{resetPin}\"}},\"TC_URI\":{{\"value\":\"ws://172.17.0.1:5000\"}},\"SPI_DEV\":{{\"value\":\"{spiDev}\"}},\"SPI_SPEED\":{{\"value\":\"{actualSpiSpeed}\"}}}},\"version\":\"1.0\",\"status\":\"running\",\"restartPolicy\":\"always\"}}}}}}}},\"$edgeHub\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"routes\":{{\"route\":\"FROM /* INTO $upstream\"}},\"storeAndForwardConfiguration\":{{\"timeToLiveSecs\":7200}}}}}},\"LoRaWanNetworkSrvModule\":{{\"properties.desired\":{{\"FacadeServerUrl\":\"{facadeURL}\",\"FacadeAuthCode\":\"{facadeAuthCode}\",\"hostAddress\":\"{lnsHostAddress}\",\"network\":\"{networkId}\",\"tenantid\":\"{TenantId}\"}}}}}},\"moduleContent\":{{}},\"deviceContent\":{{}}}}";
             Assert.Equal(expectedConfigurationJson, actualConfigurationJson);
         }
+
+        [Fact]
+        public async Task DeployEdgeDeviceWithLocalRedisContainer()
+        {
+            // Arrange
+            const string deviceId = "myGateway";
+            const string facadeURL = "https://myfunc.azurewebsites.com/api";
+            const string facadeAuthCode = "secret-code";
+
+            const string localRedisImageUrl = "ghcr.io/microsoft/garnet";
+            const string localRedisConnectionString = "escapedconnectionstring";
+            const string localRedisLocalParamsEscapedJsonString = "\\\"Ulimits\\\":[{\\\"memlock\\\":-1}]";
+
+            ConfigurationContent? actualConfiguration = null;
+            this.registryManager.Setup(x => x.ApplyConfigurationContentOnDeviceAsync(deviceId, It.IsNotNull<ConfigurationContent>()))
+                .Callback((string deviceId, ConfigurationContent c) => actualConfiguration = c);
+
+            this.registryManager.Setup(c => c.AddDeviceWithTwinAsync(It.Is<Device>(d => d.Id == deviceId && d.Capabilities.IotEdge), It.IsNotNull<Twin>()))
+                .ReturnsAsync(new BulkRegistryOperationResult
+                {
+                    IsSuccessful = true
+                });
+
+            var actualSpiSpeed = 2;
+
+            // Act
+            var args = CreateArgs($"add-gateway --reset-pin 2 --device-id {deviceId} --spi-dev 3 --spi-speed 1 --api-url {facadeURL} --api-key {facadeAuthCode} --lns-host-address ws://mylns:5000 --network {NetworkName} --lora-version {LoRaVersion} --tenant-id {TenantId} --local-redis-connection-string {localRedisConnectionString} --local-redis-module-image {localRedisImageUrl} --local-redis-params-escaped-jsonstring {localRedisLocalParamsEscapedJsonString}");
+            var actual = await Program.Run(args, this.configurationHelper);
+
+            // Assert
+            Assert.Equal(0, actual);
+            this.registryManager.Verify(x => x.ApplyConfigurationContentOnDeviceAsync(deviceId, It.IsNotNull<ConfigurationContent>()), Times.Once);
+            this.registryManager.Verify(c => c.AddDeviceWithTwinAsync(It.Is<Device>(d => d.Id == deviceId && d.Capabilities.IotEdge), It.IsNotNull<Twin>()), Times.Once);
+
+            // Should not deploy monitoring layer
+            this.registryManager.Verify(x => x.AddConfigurationAsync(It.IsNotNull<Configuration>()), Times.Never);
+
+            var actualConfigurationJson = JsonConvert.SerializeObject(actualConfiguration);
+            var expectedConfigurationJson = $"{{\"modulesContent\":{{\"$edgeAgent\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"runtime\":{{\"type\":\"docker\",\"settings\":{{\"loggingOptions\":\"\",\"minDockerVersion\":\"v1.25\"}}}},\"systemModules\":{{\"edgeAgent\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-agent:{IotEdgeVersion}\",\"createOptions\":\"{{}}\"}}}},\"edgeHub\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-hub:{IotEdgeVersion}\",\"createOptions\":\"{{ \\\"HostConfig\\\": {{   \\\"PortBindings\\\": {{\\\"8883/tcp\\\": [  {{\\\"HostPort\\\": \\\"8883\\\" }}  ], \\\"443/tcp\\\": [ {{ \\\"HostPort\\\": \\\"443\\\" }} ], \\\"5671/tcp\\\": [ {{ \\\"HostPort\\\": \\\"5671\\\"  }}] }} }}}}\"}},\"env\":{{\"OptimizeForPerformance\":{{\"value\":\"false\"}},\"mqttSettings__enabled\":{{\"value\":\"false\"}},\"AuthenticationMode\":{{\"value\":\"CloudAndScope\"}},\"NestedEdgeEnabled\":{{\"value\":\"false\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}}}},\"modules\":{{\"LoRaWanNetworkSrvModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorawannetworksrvmodule:{LoRaVersion}\",\"createOptions\":\"{{\\\"ExposedPorts\\\": {{ \\\"5000/tcp\\\": {{}}}}, \\\"HostConfig\\\": {{  \\\"PortBindings\\\": {{\\\"5000/tcp\\\": [  {{ \\\"HostPort\\\": \\\"5000\\\", \\\"HostIp\\\":\\\"172.17.0.1\\\" }} ]}}}}}}\"}},\"version\":\"1.0\",\"env\":{{\"ENABLE_GATEWAY\":{{\"value\":\"true\"}},\"LOG_LEVEL\":{{\"value\":\"2\"}},\"REDIS_CONNECTION_STRING\":{{\"value\":\"{localRedisConnectionString}\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}},\"CacheModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"{localRedisImageUrl}\",\"createOptions\":\"{{\\\"HostConfig\\\":{{\\\"NetworkMode\\\":\\\"host\\\",{localRedisLocalParamsEscapedJsonString}}}}}\"}},\"version\":\"1.0\",\"env\":{{}},\"status\":\"running\",\"restartPolicy\":\"always\"}},\"LoRaBasicsStationModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorabasicsstationmodule:999.999.10\",\"createOptions\":\"  {{\\\"HostConfig\\\": {{\\\"NetworkMode\\\": \\\"host\\\", \\\"Privileged\\\": true }},  \\\"NetworkingConfig\\\": {{\\\"EndpointsConfig\\\": {{\\\"host\\\": {{}} }}}}}}\"}},\"env\":{{\"RESET_PIN\":{{\"value\":\"2\"}},\"TC_URI\":{{\"value\":\"ws://172.17.0.1:5000\"}},\"SPI_DEV\":{{\"value\":\"3\"}},\"SPI_SPEED\":{{\"value\":\"2\"}}}},\"version\":\"1.0\",\"status\":\"running\",\"restartPolicy\":\"always\"}}}}}}}},\"$edgeHub\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"routes\":{{\"route\":\"FROM /* INTO $upstream\"}},\"storeAndForwardConfiguration\":{{\"timeToLiveSecs\":7200}}}}}},\"LoRaWanNetworkSrvModule\":{{\"properties.desired\":{{\"FacadeServerUrl\":\"https://myfunc.azurewebsites.com/api\",\"FacadeAuthCode\":\"secret-code\",\"hostAddress\":\"ws://mylns:5000\",\"network\":\"quickstartnetwork\",\"tenantid\":\"12345\"}}}}}},\"moduleContent\":{{}},\"deviceContent\":{{}}}}";
+            Assert.Equal(expectedConfigurationJson, actualConfigurationJson);
+        }
+
 
         [Fact]
         public async Task DeployEdgeDeviceWhenOmmitingSpiDevAndAndSpiSpeedSettingsAreNotSendToConfiguration()
@@ -280,6 +331,7 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
             this.registryManager.Verify(c => c.AddDeviceWithTwinAsync(It.Is<Device>(d => d.Id == deviceId && d.Capabilities.IotEdge), It.IsNotNull<Twin>()), Times.Once);
 
             var actualConfigurationJson = JsonConvert.SerializeObject(actualConfiguration);
+            //            var expectedConfigurationJson = $"{{\"modulesContent\":{{\"$edgeAgent\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"runtime\":{{\"type\":\"docker\",\"settings\":{{\"loggingOptions\":\"\",\"minDockerVersion\":\"v1.25\"}}}},\"systemModules\":{{\"edgeAgent\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-agent:{IotEdgeVersion}\",\"createOptions\":\"{{}}\"}}}},\"edgeHub\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-hub:{IotEdgeVersion}\",\"createOptions\":\"{{ \\\"HostConfig\\\": {{   \\\"PortBindings\\\": {{\\\"8883/tcp\\\": [  {{\\\"HostPort\\\": \\\"8883\\\" }}  ], \\\"443/tcp\\\": [ {{ \\\"HostPort\\\": \\\"443\\\" }} ], \\\"5671/tcp\\\": [ {{ \\\"HostPort\\\": \\\"5671\\\"  }}] }} }}}}\"}},\"env\":{{\"OptimizeForPerformance\":{{\"value\":\"false\"}},\"mqttSettings__enabled\":{{\"value\":\"false\"}},\"AuthenticationMode\":{{\"value\":\"CloudAndScope\"}},\"NestedEdgeEnabled\":{{\"value\":\"false\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}}}},\"modules\":{{\"LoRaWanNetworkSrvModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorawannetworksrvmodule:{LoRaVersion}\",\"createOptions\":\"{{\\\"ExposedPorts\\\": {{ \\\"5000/tcp\\\": {{}}}}, \\\"HostConfig\\\": {{  \\\"PortBindings\\\": {{\\\"5000/tcp\\\": [  {{ \\\"HostPort\\\": \\\"5000\\\", \\\"HostIp\\\":\\\"172.17.0.1\\\" }} ]}}}}}}\"}},\"version\":\"1.0\",\"env\":{{\"ENABLE_GATEWAY\":{{\"value\":\"true\"}},\"LOG_LEVEL\":{{\"value\":\"2\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}},\"LoRaBasicsStationModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorabasicsstationmodule:{LoRaVersion}\",\"createOptions\":\"  {{\\\"HostConfig\\\": {{\\\"NetworkMode\\\": \\\"host\\\", \\\"Privileged\\\": true }},  \\\"NetworkingConfig\\\": {{\\\"EndpointsConfig\\\": {{\\\"host\\\": {{}} }}}}}}\"}},\"env\":{{\"RESET_PIN\":{{\"value\":\"{resetPin}\"}},\"TC_URI\":{{\"value\":\"ws://172.17.0.1:5000\"}}}},\"version\":\"1.0\",\"status\":\"running\",\"restartPolicy\":\"always\"}}}}}}}},\"$edgeHub\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"routes\":{{\"route\":\"FROM /* INTO $upstream\"}},\"storeAndForwardConfiguration\":{{\"timeToLiveSecs\":7200}}}}}},\"LoRaWanNetworkSrvModule\":{{\"properties.desired\":{{\"FacadeServerUrl\":\"{facadeURL}\",\"FacadeAuthCode\":\"{facadeAuthCode}\",\"hostAddress\":\"{lnsHostAddress}\",\"network\":\"{NetworkName}\",\"tenantid\":\"\",\"tenantkey\":\"\"}}}}}},\"moduleContent\":{{}},\"deviceContent\":{{}}}}";
             var expectedConfigurationJson = $"{{\"modulesContent\":{{\"$edgeAgent\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"runtime\":{{\"type\":\"docker\",\"settings\":{{\"loggingOptions\":\"\",\"minDockerVersion\":\"v1.25\"}}}},\"systemModules\":{{\"edgeAgent\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-agent:{IotEdgeVersion}\",\"createOptions\":\"{{}}\"}}}},\"edgeHub\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"mcr.microsoft.com/azureiotedge-hub:{IotEdgeVersion}\",\"createOptions\":\"{{ \\\"HostConfig\\\": {{   \\\"PortBindings\\\": {{\\\"8883/tcp\\\": [  {{\\\"HostPort\\\": \\\"8883\\\" }}  ], \\\"443/tcp\\\": [ {{ \\\"HostPort\\\": \\\"443\\\" }} ], \\\"5671/tcp\\\": [ {{ \\\"HostPort\\\": \\\"5671\\\"  }}] }} }}}}\"}},\"env\":{{\"OptimizeForPerformance\":{{\"value\":\"false\"}},\"mqttSettings__enabled\":{{\"value\":\"false\"}},\"AuthenticationMode\":{{\"value\":\"CloudAndScope\"}},\"NestedEdgeEnabled\":{{\"value\":\"false\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}}}},\"modules\":{{\"LoRaWanNetworkSrvModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorawannetworksrvmodule:{LoRaVersion}\",\"createOptions\":\"{{\\\"ExposedPorts\\\": {{ \\\"5000/tcp\\\": {{}}}}, \\\"HostConfig\\\": {{  \\\"PortBindings\\\": {{\\\"5000/tcp\\\": [  {{ \\\"HostPort\\\": \\\"5000\\\", \\\"HostIp\\\":\\\"172.17.0.1\\\" }} ]}}}}}}\"}},\"version\":\"1.0\",\"env\":{{\"ENABLE_GATEWAY\":{{\"value\":\"true\"}},\"LOG_LEVEL\":{{\"value\":\"2\"}}}},\"status\":\"running\",\"restartPolicy\":\"always\"}},\"LoRaBasicsStationModule\":{{\"type\":\"docker\",\"settings\":{{\"image\":\"loraedge/lorabasicsstationmodule:{LoRaVersion}\",\"createOptions\":\"  {{\\\"HostConfig\\\": {{\\\"NetworkMode\\\": \\\"host\\\", \\\"Privileged\\\": true }},  \\\"NetworkingConfig\\\": {{\\\"EndpointsConfig\\\": {{\\\"host\\\": {{}} }}}}}}\"}},\"env\":{{\"RESET_PIN\":{{\"value\":\"{resetPin}\"}},\"TC_URI\":{{\"value\":\"ws://172.17.0.1:5000\"}}}},\"version\":\"1.0\",\"status\":\"running\",\"restartPolicy\":\"always\"}}}}}}}},\"$edgeHub\":{{\"properties.desired\":{{\"schemaVersion\":\"1.0\",\"routes\":{{\"route\":\"FROM /* INTO $upstream\"}},\"storeAndForwardConfiguration\":{{\"timeToLiveSecs\":7200}}}}}},\"LoRaWanNetworkSrvModule\":{{\"properties.desired\":{{\"FacadeServerUrl\":\"{facadeURL}\",\"FacadeAuthCode\":\"{facadeAuthCode}\",\"hostAddress\":\"{lnsHostAddress}\",\"network\":\"{NetworkName}\"}}}}}},\"moduleContent\":{{}},\"deviceContent\":{{}}}}";
             Assert.Equal(expectedConfigurationJson, actualConfigurationJson);
         }
@@ -346,6 +398,7 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
 #pragma warning disable CA1308 // Normalize strings to uppercase
                     Assert.Equal(region.ToLowerInvariant(), t.Tags[DeviceTags.RegionTagName].ToString());
 #pragma warning restore CA1308 // Normalize strings to uppercase
+                    Assert.Equal(TenantId, (string) t.Tags["tenantid"]);
                     savedTwin = t;
                 })
                 .ReturnsAsync(new BulkRegistryOperationResult
@@ -363,7 +416,7 @@ namespace LoRaWan.Tools.CLI.Tests.Unit
                 });
 
             // Act
-            var args = CreateArgs($"add --type concentrator --region {region} --stationeui {stationEui}  --no-cups --network {networkId}");
+            var args = CreateArgs($"add --type concentrator --region {region} --stationeui {stationEui}  --no-cups --network {networkId} --tenant-id {TenantId}");
             var actual = await Program.Run(args, this.configurationHelper);
 
             // Assert

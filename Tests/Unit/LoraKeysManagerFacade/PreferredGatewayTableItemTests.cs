@@ -3,7 +3,7 @@
 
 namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
 {
-    using global::LoraKeysManagerFacade;
+    using LoraDeviceManager.FunctionBundler;
     using Xunit;
 
     public class PreferredGatewayTableItemTests

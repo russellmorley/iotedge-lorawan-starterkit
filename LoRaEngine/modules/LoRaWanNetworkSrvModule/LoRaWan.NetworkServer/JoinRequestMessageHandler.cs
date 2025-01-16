@@ -10,10 +10,10 @@ namespace LoRaWan.NetworkServer
     using System.Threading;
     using System.Threading.Tasks;
     using LoRaTools;
-    using LoRaTools.CommonAPI;
     using LoRaTools.LoRaMessage;
     using LoRaTools.LoRaPhysical;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaTools.Utils;
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
@@ -24,7 +24,7 @@ namespace LoRaWan.NetworkServer
         private readonly ILoRaDeviceRegistry deviceRegistry;
         private readonly Counter<int> joinRequestCounter;
         private readonly ILogger<JoinRequestMessageHandler> logger;
-        private readonly LoRaDeviceAPIServiceBase apiService;
+        private readonly LoraDeviceManagerServicesBase apiService;
         private readonly Counter<int> receiveWindowHits;
         private readonly Counter<int> receiveWindowMisses;
         private readonly Counter<int> unhandledExceptionCount;
@@ -35,7 +35,7 @@ namespace LoRaWan.NetworkServer
                                          IConcentratorDeduplication concentratorDeduplication,
                                          ILoRaDeviceRegistry deviceRegistry,
                                          ILogger<JoinRequestMessageHandler> logger,
-                                         LoRaDeviceAPIServiceBase apiService,
+                                         LoraDeviceManagerServicesBase loraDeviceManagerService,
                                          Meter meter)
         {
             this.configuration = configuration;
@@ -43,7 +43,7 @@ namespace LoRaWan.NetworkServer
             this.deviceRegistry = deviceRegistry;
             this.joinRequestCounter = meter?.CreateCounter<int>(MetricRegistry.JoinRequests);
             this.logger = logger;
-            this.apiService = apiService;
+            this.apiService = loraDeviceManagerService;
             this.receiveWindowHits = meter?.CreateCounter<int>(MetricRegistry.ReceiveWindowHits);
             this.receiveWindowMisses = meter?.CreateCounter<int>(MetricRegistry.ReceiveWindowMisses);
             this.unhandledExceptionCount = meter?.CreateCounter<int>(MetricRegistry.UnhandledExceptions);

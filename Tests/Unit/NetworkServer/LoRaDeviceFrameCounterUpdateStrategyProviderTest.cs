@@ -3,18 +3,19 @@
 
 namespace LoRaWan.Tests.Unit.NetworkServer
 {
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using Moq;
     using Xunit;
 
     public class LoRaDeviceFrameCounterUpdateStrategyProviderTest
     {
-        private readonly Mock<LoRaDeviceAPIServiceBase> loRaDeviceApi;
+        private readonly Mock<LoraDeviceManagerServicesBase> loRaDeviceApi;
         private readonly NetworkServerConfiguration networkServerConfiguration;
 
         public LoRaDeviceFrameCounterUpdateStrategyProviderTest()
         {
-            this.loRaDeviceApi = new Mock<LoRaDeviceAPIServiceBase>();
+            this.loRaDeviceApi = new Mock<LoraDeviceManagerServicesBase>();
             networkServerConfiguration = new NetworkServerConfiguration
             {
                 GatewayID = "test-gateway"

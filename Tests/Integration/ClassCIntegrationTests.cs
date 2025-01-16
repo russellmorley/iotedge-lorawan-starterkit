@@ -8,9 +8,10 @@ namespace LoRaWan.Tests.Integration
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.FunctionBundler;
     using LoRaTools.LoRaMessage;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
@@ -80,7 +81,7 @@ namespace LoRaWan.Tests.Integration
                 .ReturnsAsync((Message)null);
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(simDevice.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
 
             if (deviceGatewayID == null)
             {
@@ -190,7 +191,7 @@ namespace LoRaWan.Tests.Integration
             }
 
             LoRaDeviceApi.Setup(x => x.SearchAndLockForJoinAsync(ServerConfiguration.GatewayID, simDevice.DevEUI, It.IsAny<DevNonce>()))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
 
             using var cache = NewMemoryCache();
             await using var deviceRegistry = new LoRaDeviceRegistry(ServerConfiguration, cache, LoRaDeviceApi.Object, LoRaDeviceFactory, DeviceCache);
@@ -379,7 +380,7 @@ namespace LoRaWan.Tests.Integration
                 });
 
             LoRaDeviceApi.Setup(x => x.SearchAndLockForJoinAsync(ServerConfiguration.GatewayID, simDevice.DevEUI, It.IsAny<DevNonce>()))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
 
             using var cache = NewMemoryCache();
             await using var deviceRegistry = new LoRaDeviceRegistry(ServerConfiguration, cache, LoRaDeviceApi.Object, LoRaDeviceFactory, DeviceCache);

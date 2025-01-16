@@ -8,9 +8,14 @@ namespace LoRaWan.Tests.Integration
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using LoraKeysManagerFacade;
-    using LoraKeysManagerFacade.FunctionBundler;
+    using LoraDeviceManager.FunctionBundler;
+    using LoraDeviceManager.Utils;
     using LoRaTools;
+    using LoRaTools.CacheStore;
+    using LoRaTools.ChannelPublisher;
+    using LoRaTools.EdgeDeviceGetter;
+    using LoRaTools.FunctionBundler;
+    using LoRaTools.ServiceClient;
     using LoRaWan.Tests.Common;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.Azure.Devices;
@@ -23,7 +28,7 @@ namespace LoRaWan.Tests.Integration
     [Collection(RedisFixture.CollectionName)]
     public sealed class DeduplicationTestWithRedis : IClassFixture<RedisFixture>, IDisposable
     {
-        private readonly ILoRaDeviceCacheStore cache;
+        private readonly ICacheStore cacheStore;
         private readonly Mock<IServiceClient> serviceClientMock;
         private readonly TelemetryConfiguration telemetryConfiguration;
         private readonly Mock<IEdgeDeviceGetter> edgeDeviceGetter;
@@ -34,12 +39,12 @@ namespace LoRaWan.Tests.Integration
         {
             if (redis is null) throw new ArgumentNullException(nameof(redis));
 
-            this.cache = new LoRaDeviceCacheRedisStore(redis.Database);
+            this.cacheStore = new LoRaDeviceCacheRedisStore(redis.Database);
             this.serviceClientMock = new Mock<IServiceClient>();
             this.telemetryConfiguration = new TelemetryConfiguration();
             this.edgeDeviceGetter = new Mock<IEdgeDeviceGetter>();
             this.channelPublisher = new Mock<IChannelPublisher>();
-            this.deduplicationExecutionItem = new DeduplicationExecutionItem(this.cache,
+            this.deduplicationExecutionItem = new DeduplicationExecutionItem(this.cacheStore,
                                                                              this.serviceClientMock.Object,
                                                                              this.edgeDeviceGetter.Object,
                                                                              this.channelPublisher.Object,
@@ -100,7 +105,7 @@ namespace LoRaWan.Tests.Integration
                 {
                     // gateway1 should be notified that it needs to drop connection for the device
                     this.serviceClientMock.Verify(x => x.InvokeDeviceMethodAsync(gateway1, Constants.NetworkServerModuleId,
-                        It.Is<CloudToDeviceMethod>(m => m.MethodName == LoraKeysManagerFacadeConstants.CloudToDeviceCloseConnection
+                        It.Is<CloudToDeviceMethod>(m => m.MethodName == LoraDeviceManagerConstants.CloudToDeviceCloseConnection
                         && m.GetPayloadAsJson().Contains(devEUI.ToString())), It.IsAny<CancellationToken>()));
                 }
                 else

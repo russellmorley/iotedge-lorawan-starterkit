@@ -4,6 +4,7 @@
 namespace LoRaWan.Tests.Unit.NetworkServer.BasicsStation
 {
     using global::LoRaTools.Regions;
+    using global::LoRaTools.Services;
     using global::LoRaTools.Utils;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.BasicsStation;
@@ -25,7 +26,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer.BasicsStation
 
     public class BasicsStationConfigurationServiceTests : IDisposable
     {
-        private readonly Mock<LoRaDeviceAPIServiceBase> loRaDeviceApiServiceMock;
+        private readonly Mock<LoraDeviceManagerServicesBase> loRaDeviceApiServiceMock;
         private readonly Mock<ILoRaDeviceFactory> loRaDeviceFactoryMock;
         private readonly IMemoryCache memoryCache;
         private readonly StationEui stationEui;
@@ -37,7 +38,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer.BasicsStation
         {
             this.stationEui = new StationEui(ulong.MaxValue);
             this.devEui = DevEui.Parse(this.stationEui.ToString());
-            this.loRaDeviceApiServiceMock = new Mock<LoRaDeviceAPIServiceBase>();
+            this.loRaDeviceApiServiceMock = new Mock<LoraDeviceManagerServicesBase>();
             this.loRaDeviceFactoryMock = new Mock<ILoRaDeviceFactory>();
             this.memoryCache = new MemoryCache(new MemoryCacheOptions());
             this.sut = new BasicsStationConfigurationService(this.loRaDeviceApiServiceMock.Object,
@@ -372,7 +373,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer.BasicsStation
             }
 
             /// <summary>
-            /// Since stations are also devices in IoT Hub, we use the <see cref="IoTHubDeviceInfo"/> when searching for station configuration.
+            /// Since stations are also devices in IoT Hub, we use the <see cref="IoTHubDeviceServiceInfo"/> when searching for station configuration.
             /// This requires that we can interpret a station EUI also as a device EUI. If that property does not hold, we need to change the way we query
             /// IoT Hub for station devices.
             /// </summary>

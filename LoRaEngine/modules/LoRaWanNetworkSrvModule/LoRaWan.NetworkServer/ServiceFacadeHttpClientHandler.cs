@@ -3,7 +3,7 @@
 
 namespace LoRaWan.Core
 {
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Version;
     using System;
     using System.Linq;
     using System.Net;

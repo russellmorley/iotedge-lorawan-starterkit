@@ -6,6 +6,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     using System.Diagnostics.Metrics;
     using System.Linq;
     using System.Threading.Tasks;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -48,7 +49,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
                                               deduplicationMock.Object,
                                               Mock.Of<ILoRaDeviceRegistry>(),
                                               NullLogger<JoinRequestMessageHandler>.Instance,
-                                              Mock.Of<LoRaDeviceAPIServiceBase>(),
+                                              Mock.Of<LoraDeviceManagerServicesBase>(),
                                               meter),
                 meter);
         }

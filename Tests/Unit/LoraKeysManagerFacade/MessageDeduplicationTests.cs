@@ -6,9 +6,12 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
-    using global::LoraKeysManagerFacade.FunctionBundler;
     using global::LoRaTools;
+    using global::LoRaTools.ChannelPublisher;
+    using global::LoRaTools.EdgeDeviceGetter;
+    using global::LoRaTools.ServiceClient;
+    using LoraDeviceManager.FunctionBundler;
+    using LoraDeviceManager.Utils;
     using LoRaWan.Tests.Common;
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.Azure.Devices;
@@ -94,7 +97,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             this.serviceClientMock.Verify(
                 x => x.InvokeDeviceMethodAsync(gateway1Id.ToString(), Constants.NetworkServerModuleId,
                 It.Is<CloudToDeviceMethod>(
-                    m => m.MethodName == LoraKeysManagerFacadeConstants.CloudToDeviceCloseConnection
+                    m => m.MethodName == LoraDeviceManagerConstants.CloudToDeviceCloseConnection
                     && m.GetPayloadAsJson().Contains(dev1EUI.ToString())), It.IsAny<CancellationToken>()),
                 Times.Once);
 
@@ -110,7 +113,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
             this.serviceClientMock.Verify(
                 x => x.InvokeDeviceMethodAsync(gateway1Id.ToString(), Constants.NetworkServerModuleId,
                 It.Is<CloudToDeviceMethod>(
-                    m => m.MethodName == LoraKeysManagerFacadeConstants.CloudToDeviceCloseConnection
+                    m => m.MethodName == LoraDeviceManagerConstants.CloudToDeviceCloseConnection
                     && m.GetPayloadAsJson().Contains(dev2EUI.ToString())), It.IsAny<CancellationToken>()),
                 Times.Once);
         }
@@ -134,7 +137,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade.FunctionBundler
 
             this.serviceClientMock.Verify(
                 x => x.InvokeDeviceMethodAsync(gateway1Id.ToString(), Constants.NetworkServerModuleId,
-                It.Is<CloudToDeviceMethod>(m => m.MethodName == LoraKeysManagerFacadeConstants.CloudToDeviceCloseConnection), It.IsAny<CancellationToken>()),
+                It.Is<CloudToDeviceMethod>(m => m.MethodName == LoraDeviceManagerConstants.CloudToDeviceCloseConnection), It.IsAny<CancellationToken>()),
                 Times.Once);
 
             Assert.False(result.IsDuplicate);

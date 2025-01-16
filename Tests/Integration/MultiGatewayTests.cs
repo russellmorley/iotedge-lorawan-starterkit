@@ -7,6 +7,8 @@ namespace LoRaWan.Tests.Integration
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using LoRaTools.FunctionBundler;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
@@ -154,7 +156,7 @@ namespace LoRaWan.Tests.Integration
 
             // device api will be searched for payload
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEui, "abc").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEui, "abc").AsList()));
 
             using var memoryCache = new MemoryCache(new MemoryCacheOptions());
             await using var deviceRegistry = new LoRaDeviceRegistry(ServerConfiguration, memoryCache, LoRaDeviceApi.Object, LoRaDeviceFactory, DeviceCache);

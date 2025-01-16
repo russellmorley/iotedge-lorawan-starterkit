@@ -3,7 +3,7 @@
 
 namespace LoRaWan.NetworkServer
 {
-    using LoRaTools.CommonAPI;
+    using LoRaTools.FunctionBundler;
     using System;
 
     public class FunctionBundlerFCntDownExecutionItem : IFunctionBundlerExecutionItem

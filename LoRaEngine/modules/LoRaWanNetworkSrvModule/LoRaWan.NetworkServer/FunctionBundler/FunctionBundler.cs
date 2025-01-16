@@ -6,11 +6,13 @@ namespace LoRaWan.NetworkServer
     using System.Collections.Generic;
     using System.Text.Json;
     using System.Threading.Tasks;
+    using LoRaTools.FunctionBundler;
+    using LoRaTools.Services;
     using Microsoft.Extensions.Logging;
 
     public class FunctionBundler
     {
-        private readonly LoRaDeviceAPIServiceBase deviceApi;
+        private readonly LoraDeviceManagerServicesBase deviceApi;
         private readonly FunctionBundlerRequest request;
         private readonly DevEui devEui;
         private readonly IList<IFunctionBundlerExecutionItem> executionItems;
@@ -18,7 +20,7 @@ namespace LoRaWan.NetworkServer
         private readonly ILogger<FunctionBundler> logger;
 
         internal FunctionBundler(DevEui devEui,
-                                 LoRaDeviceAPIServiceBase deviceApi,
+                                 LoraDeviceManagerServicesBase deviceApi,
                                  FunctionBundlerRequest request,
                                  IList<IFunctionBundlerExecutionItem> executionItems,
                                  FunctionBundlerExecutionContext executionContext,

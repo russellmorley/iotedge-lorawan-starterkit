@@ -7,6 +7,7 @@ namespace LoRaWan.Tests.Common
     using System.Globalization;
     using System.Threading.Tasks;
     using LoRaTools.ADR;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.ADR;
     using Microsoft.Extensions.Caching.Memory;
@@ -26,7 +27,7 @@ namespace LoRaWan.Tests.Common
 
         public TestDownstreamMessageSender SecondDownstreamMessageSender { get; }
 
-        public Mock<LoRaDeviceAPIServiceBase> SecondLoRaDeviceApi { get; }
+        public Mock<LoraDeviceManagerServicesBase> SecondLoRaDeviceApi { get; }
 
         public LoRaDeviceFrameCounterUpdateStrategyProvider SecondFrameCounterUpdateStrategyProvider { get; }
 
@@ -50,7 +51,7 @@ namespace LoRaWan.Tests.Common
             };
 
             SecondDownstreamMessageSender = new TestDownstreamMessageSender();
-            SecondLoRaDeviceApi = new Mock<LoRaDeviceAPIServiceBase>(MockBehavior.Strict);
+            SecondLoRaDeviceApi = new Mock<LoraDeviceManagerServicesBase>(MockBehavior.Strict);
             SecondFrameCounterUpdateStrategyProvider = new LoRaDeviceFrameCounterUpdateStrategyProvider(SecondServerConfiguration, SecondLoRaDeviceApi.Object);
             this.cache = new MemoryCache(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(5) });
 

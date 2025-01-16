@@ -6,7 +6,7 @@ namespace LoRaWan.NetworkServer
     using System;
     using System.Net;
     using System.Net.Http;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Version;
     using LoRaWan.Core;
     using Microsoft.Extensions.DependencyInjection;
     using Polly;

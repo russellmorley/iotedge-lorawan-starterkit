@@ -6,6 +6,7 @@ namespace LoRaWan.NetworkServer
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using LoRaTools.Services;
     using Microsoft.Extensions.Logging;
 
     /// <summary>
@@ -14,7 +15,7 @@ namespace LoRaWan.NetworkServer
     /// </summary>
     internal class JoinDeviceLoader : IDisposable
     {
-        private readonly IoTHubDeviceInfo ioTHubDevice;
+        private readonly IoTHubDeviceServiceInfo ioTHubDevice;
         private readonly ILoRaDeviceFactory deviceFactory;
         private readonly LoRaDeviceCache deviceCache;
         private volatile bool canCache;
@@ -23,7 +24,7 @@ namespace LoRaWan.NetworkServer
 
         internal bool CanCache => this.canCache;
 
-        internal JoinDeviceLoader(IoTHubDeviceInfo ioTHubDevice, ILoRaDeviceFactory deviceFactory, LoRaDeviceCache deviceCache, ILogger<JoinDeviceLoader> logger)
+        internal JoinDeviceLoader(IoTHubDeviceServiceInfo ioTHubDevice, ILoRaDeviceFactory deviceFactory, LoRaDeviceCache deviceCache, ILogger<JoinDeviceLoader> logger)
         {
             this.ioTHubDevice = ioTHubDevice;
             this.deviceFactory = deviceFactory;

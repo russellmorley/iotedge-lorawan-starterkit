@@ -10,8 +10,11 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::LoRaTools.CommonAPI;
+    using global::LoRaTools.BasicsStation.Processors;
+    using global::LoRaTools.FunctionBundler;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
+    using LoRaWan.NetworkServer.Services;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Logging.Abstractions;
     using Moq;
@@ -166,7 +169,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         public Task FetchStationFirmwareAsync_Disposes_HttpClient() =>
             ApiCall_Disposes_HttpClient(s => s.FetchStationFirmwareAsync(new StationEui(1), CancellationToken.None));
 
-        private static async Task ApiCall_Disposes_HttpClient(Func<LoRaDeviceAPIServiceBase, Task> callApiAsync, string jsonContent = null)
+        private static async Task ApiCall_Disposes_HttpClient(Func<LoraDeviceManagerServicesBase, Task> callApiAsync, string jsonContent = null)
         {
             // arrange
             using var content = jsonContent is { } someJsonContent ? new StringContent(someJsonContent, Encoding.UTF8, MediaTypeNames.Application.Json) : new StringContent("foo");
@@ -193,16 +196,31 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             return new DisposableValue<MockHttpClientFactory>(result, () => { httpHandlerMock.Dispose(); result.Dispose(); });
         }
 
-        private static LoRaDeviceAPIService Setup(string basePath) =>
-            new LoRaDeviceAPIService(new NetworkServerConfiguration { FacadeServerUrl = new Uri(basePath) },
-                                     new Mock<IHttpClientFactory>().Object,
-                                     NullLogger<LoRaDeviceAPIService>.Instance,
-                                     TestMeter.Instance);
+        //private static ITenantValidationStrategy GetTenantValidationStrategyMockObject()
+        //{
+        //    var tenantValidationStrategyMock = new Mock<ITenantValidationStrategy>();
+        //    tenantValidationStrategyMock.Setup(t => t.AddQueryParametersIfValidatesTenant(
+        //        It.IsAny<Dictionary<string, string>>(),
+        //                                 It.IsAny<string>(),
+        //                                 It.IsAny<string>(),
+        //                                 It.IsAny<string>(),
+        //                                 It.IsAny<DateTime>()
 
-        private static LoRaDeviceAPIService Setup(IHttpClientFactory httpClientFactory) =>
-            new LoRaDeviceAPIService(new NetworkServerConfiguration { FacadeServerUrl = new Uri("https://aka.ms/api/") },
+        //        )).Returns((Dictionary<string, string> queryParameters, string a, string b, string c, DateTime d) => queryParameters);
+        //    return tenantValidationStrategyMock.Object;
+        //}
+        private static LoraDeviceManagerServicesProxy Setup(string basePath) {
+            return new LoraDeviceManagerServicesProxy(new NetworkServerConfiguration { FacadeServerUrl = new Uri(basePath) },
+                                     new Mock<IHttpClientFactory>().Object,
+                                     NullLogger<LoraDeviceManagerServicesProxy>.Instance,
+                                     new TestNoValidateTenantStrategy(),
+                                     TestMeter.Instance);
+        }
+        private static LoraDeviceManagerServicesProxy Setup(IHttpClientFactory httpClientFactory) =>
+            new LoraDeviceManagerServicesProxy(new NetworkServerConfiguration { FacadeServerUrl = new Uri("https://aka.ms/api/") },
                                      httpClientFactory,
-                                     NullLogger<LoRaDeviceAPIService>.Instance,
+                                     NullLogger<LoraDeviceManagerServicesProxy>.Instance,
+                                     new TestNoValidateTenantStrategy(),
                                      TestMeter.Instance);
     }
 }

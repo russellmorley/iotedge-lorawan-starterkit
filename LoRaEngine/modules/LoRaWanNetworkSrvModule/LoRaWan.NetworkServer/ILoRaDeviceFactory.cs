@@ -3,6 +3,7 @@
 
 namespace LoRaWan.NetworkServer
 {
+    using LoRaTools.Services;
     using System;
     using System.Threading;
     using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace LoRaWan.NetworkServer
         /// <exception cref="InvalidOperationException">If the device was previously registered.</exception>
         /// <exception cref="ArgumentNullException">If the <paramref name="deviceInfo"/> is null.</exception>
         /// <exception cref="ArgumentException">If the <paramref name="deviceInfo"/> is incomplete.</exception>
-        Task<LoRaDevice> CreateAndRegisterAsync(IoTHubDeviceInfo deviceInfo, CancellationToken cancellationToken);
+        Task<LoRaDevice> CreateAndRegisterAsync(IoTHubDeviceServiceInfo deviceInfo, CancellationToken cancellationToken);
 
         /// <summary>
         /// Creates a device client based on the device ID and primary key.

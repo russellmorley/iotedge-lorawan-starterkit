@@ -11,6 +11,7 @@ namespace LoRaWan.Tests.Common
     using LoRaTools.ADR;
     using LoRaTools.LoRaMessage;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.ADR;
     using LoRaWan.NetworkServer.BasicsStation;
@@ -37,7 +38,7 @@ namespace LoRaWan.Tests.Common
 
         protected Region DefaultRegion { get; }
 
-        protected Mock<LoRaDeviceAPIServiceBase> LoRaDeviceApi { get; }
+        protected Mock<LoraDeviceManagerServicesBase> LoRaDeviceApi { get; }
 
         protected ILoRaDeviceFrameCounterUpdateStrategyProvider FrameCounterUpdateStrategyProvider { get; }
 
@@ -76,7 +77,7 @@ namespace LoRaWan.Tests.Common
             this.valuesToDispose.Add(httpClientFactory);
             PayloadDecoder = new TestLoRaPayloadDecoder(new LoRaPayloadDecoder(httpClientFactory, this.testOutputLoggerFactory.CreateLogger<LoRaPayloadDecoder>()));
             DownstreamMessageSender = new TestDownstreamMessageSender();
-            LoRaDeviceApi = new Mock<LoRaDeviceAPIServiceBase>(MockBehavior.Strict);
+            LoRaDeviceApi = new Mock<LoraDeviceManagerServicesBase>(MockBehavior.Strict);
             FrameCounterUpdateStrategyProvider = new LoRaDeviceFrameCounterUpdateStrategyProvider(ServerConfiguration, LoRaDeviceApi.Object);
             this.cache = new MemoryCache(new MemoryCacheOptions() { ExpirationScanFrequency = TimeSpan.FromSeconds(5) });
 
@@ -116,7 +117,7 @@ namespace LoRaWan.Tests.Common
         protected DisposableValue<DefaultLoRaDataRequestHandler>
             CreateDefaultLoRaDataRequestHandler(NetworkServerConfiguration networkServerConfiguration,
                                                 ILoRaDeviceFrameCounterUpdateStrategyProvider frameCounterUpdateStrategyProvider,
-                                                LoRaDeviceAPIServiceBase loraDeviceApi,
+                                                LoraDeviceManagerServicesBase loraDeviceApi,
                                                 IConcentratorDeduplication concentratorDeduplication)
         {
             var deduplicationFactory = new DeduplicationStrategyFactory(this.testOutputLoggerFactory, this.testOutputLoggerFactory.CreateLogger<DeduplicationStrategyFactory>());

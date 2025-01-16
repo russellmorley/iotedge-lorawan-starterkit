@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A3AF6806
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoRaWan.NetworkServerDiscovery", "LoRaEngine\modules\LoRaWan.NetworkServerDiscovery\LoRaWan.NetworkServerDiscovery.csproj", "{CF2A693D-59FF-490D-934C-8D7AD552A030}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LoraDeviceManager", "LoRaEngine\LoraDeviceManager\LoraDeviceManager.csproj", "{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -131,6 +133,14 @@ Global
 		{CF2A693D-59FF-490D-934C-8D7AD552A030}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CF2A693D-59FF-490D-934C-8D7AD552A030}.Release|x86.ActiveCfg = Release|Any CPU
 		{CF2A693D-59FF-490D-934C-8D7AD552A030}.Release|x86.Build.0 = Release|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Debug|x86.Build.0 = Debug|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Release|x86.ActiveCfg = Release|Any CPU
+		{DE3F2A0A-AC26-4FFF-8399-125BDB6253E2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

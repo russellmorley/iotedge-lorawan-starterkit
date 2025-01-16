@@ -1,0 +1,54 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace LoRaTools.Services
+{
+    using LoRaWan;
+    using Newtonsoft.Json;
+
+    public class IoTHubDeviceServiceInfo
+    {
+        [JsonProperty(nameof(DevAddr))]
+        public string DevAddrString
+        {
+            get => DevAddr?.ToString();
+            set => DevAddr = value is { Length: 8 } some ? LoRaWan.DevAddr.Parse(some) : null;
+        }
+
+        [JsonIgnore]
+        public DevAddr? DevAddr { get; set; }
+
+        [JsonIgnore]
+        public DevEui DevEUI { get; set; }
+
+        [JsonProperty(nameof(DevEUI))]
+        public string DevEuiString
+        {
+            get => DevEUI.ToString();
+            set => DevEUI = DevEui.Parse(value);
+        }
+
+        public string PrimaryKey { get; set; }
+
+        public string GatewayId { get; set; }
+
+        [JsonIgnore]
+        public NetworkSessionKey? NwkSKey { get; set; }
+
+        [JsonProperty(nameof(NwkSKey))]
+        public string NwkSKeyString
+        {
+            get => NwkSKey?.ToString();
+            set => NwkSKey = value is null ? null : NetworkSessionKey.Parse(value);
+        }
+        public IoTHubDeviceServiceInfo()
+        {
+        }
+        public IoTHubDeviceServiceInfo(DevAddr? devAddr, DevEui devEui, string primaryKey)
+        {
+            DevAddr = devAddr;
+            DevEUI = devEui;
+            PrimaryKey = primaryKey;
+        }
+    }
+}

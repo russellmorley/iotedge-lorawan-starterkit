@@ -5,7 +5,7 @@ namespace LoRaWan.Tests.Unit.LoRaTools.CommonAPI
 {
     using System;
     using global::LoRaTools;
-    using global::LoRaTools.CommonAPI;
+    using global::LoRaTools.Services;
     using LoRaWan.Tests.Common;
     using Xunit;
 

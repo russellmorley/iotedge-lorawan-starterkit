@@ -6,9 +6,10 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
-    using global::LoraKeysManagerFacade.FunctionBundler;
-    using global::LoRaTools.CommonAPI;
+    using global::LoraKeysManagerFacade.LoraDeviceManagerServices;
+    using global::LoRaTools.Version;
+    using LoraDeviceManager;
+    using LoRaWan.Tests.Common;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.WebJobs;
@@ -29,9 +30,19 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             var dummyExecContext = new ExecutionContext();
             var apiCalls = new Func<HttpRequest, Task<IActionResult>>[]
             {
-                (req) => Task.Run(() => new FCntCacheCheck(null, NullLogger<FCntCacheCheck>.Instance).NextFCntDownInvoke(req)),
-                (req) => Task.Run(() => new FunctionBundlerFunction(Array.Empty<IFunctionBundlerExecutionItem>(), NullLogger<FunctionBundlerFunction>.Instance).FunctionBundler(req, string.Empty)),
-                (req) => new DeviceGetter(null, null, NullLogger<DeviceGetter>.Instance).GetDevice(req)
+                (req) => Task.Run(() => new NextFCntDownFunction(null, NullLogger<NextFCntDownFunction>.Instance, new TestNoValidateTenantStrategy()).NextFCntDown(req)),
+                (req) => Task.Run(() => new FunctionBundlerFunction(
+                    new LoraDeviceManagerImpl(null, null, null, null, null, NullLogger<LoraDeviceManagerImpl>.Instance),
+                    NullLogger<FunctionBundlerFunction>.Instance, 
+                    new TestNoValidateTenantStrategy())
+                        .FunctionBundler(req, string.Empty)),
+                (req) => new GetDeviceFunction(
+                    new LoraDeviceManagerImpl(null, null, null, null, null, NullLogger<LoraDeviceManagerImpl>.Instance), 
+                    NullLogger<GetDeviceFunction>.Instance,
+                    new TestNoValidateTenantStrategy(),
+                    null)
+                        .GetDevice(req),
+
             };
 
             foreach (var apiCall in apiCalls)

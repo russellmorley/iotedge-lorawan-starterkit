@@ -5,12 +5,14 @@ namespace LoRaWan.NetworkServer
 {
     using System.Collections.Generic;
     using System.Text.Json;
+    using LoRaTools.FunctionBundler;
     using LoRaTools.LoRaMessage;
+    using LoRaTools.Services;
     using Microsoft.Extensions.Logging;
 
     public class FunctionBundlerProvider : IFunctionBundlerProvider
     {
-        private readonly LoRaDeviceAPIServiceBase deviceApi;
+        private readonly LoraDeviceManagerServicesBase deviceApi;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<FunctionBundlerProvider> logger;
         private static readonly List<IFunctionBundlerExecutionItem> FunctionItems = new List<IFunctionBundlerExecutionItem>
@@ -21,7 +23,7 @@ namespace LoRaWan.NetworkServer
             new FunctionBundlerPreferredGatewayExecutionItem(),
         };
 
-        public FunctionBundlerProvider(LoRaDeviceAPIServiceBase deviceApi,
+        public FunctionBundlerProvider(LoraDeviceManagerServicesBase deviceApi,
                                        ILoggerFactory loggerFactory,
                                        ILogger<FunctionBundlerProvider> logger)
         {

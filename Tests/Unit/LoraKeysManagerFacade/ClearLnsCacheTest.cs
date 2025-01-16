@@ -9,8 +9,12 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
+    using global::LoraKeysManagerFacade.LoraDeviceDownstreamService;
     using global::LoRaTools;
+    using global::LoRaTools.ChannelPublisher;
+    using global::LoRaTools.EdgeDeviceGetter;
+    using global::LoRaTools.ServiceClient;
+    using LoraDeviceManager.Utils;
     using Microsoft.Azure.Devices;
     using Microsoft.Extensions.Logging.Abstractions;
     using Moq;
@@ -21,14 +25,18 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         private readonly Mock<IEdgeDeviceGetter> edgeDeviceGetter;
         private readonly Mock<IServiceClient> serviceClient;
         private readonly Mock<IChannelPublisher> channelPublisher;
-        private readonly ClearLnsCache clearLnsCache;
+        private readonly ClearNetworkServerCacheFunction clearNetworkServerCacheFunction;
 
         public ClearLnsCacheTest()
         {
             this.edgeDeviceGetter = new Mock<IEdgeDeviceGetter>();
             this.serviceClient = new Mock<IServiceClient>();
             this.channelPublisher = new Mock<IChannelPublisher>();
-            this.clearLnsCache = new ClearLnsCache(this.edgeDeviceGetter.Object, this.serviceClient.Object, this.channelPublisher.Object, NullLogger<ClearLnsCache>.Instance);
+            this.clearNetworkServerCacheFunction = new ClearNetworkServerCacheFunction(
+                edgeDeviceGetter.Object, 
+                serviceClient.Object, 
+                channelPublisher.Object, 
+                NullLogger<ClearNetworkServerCacheFunction>.Instance);
         }
 
         [Fact]
@@ -42,18 +50,18 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                 .ReturnsAsync(new CloudToDeviceMethodResult() { Status = 200 });
 
             //act
-            await this.clearLnsCache.ClearLnsCacheInternalAsync(default);
+            await this.clearNetworkServerCacheFunction.ClearLnsCacheInternalAsync(default);
 
             //assert
             foreach (var edgeDevice in listEdgeDevices)
             {
                 this.serviceClient.Verify(c => c.InvokeDeviceMethodAsync(edgeDevice,
                                                                     Constants.NetworkServerModuleId,
-                                                                    It.Is<CloudToDeviceMethod>(c => c.MethodName == LoraKeysManagerFacadeConstants.ClearCacheMethodName),
+                                                                    It.Is<CloudToDeviceMethod>(c => c.MethodName == LoraDeviceManagerConstants.ClearCacheMethodName),
                                                                     It.IsAny<CancellationToken>()), Times.Once());
             }
 
-            this.channelPublisher.Verify(c => c.PublishAsync(LoraKeysManagerFacadeConstants.ClearCacheMethodName, It.Is<LnsRemoteCall>(r => r.Kind == RemoteCallKind.ClearCache)), Times.Once());
+            this.channelPublisher.Verify(c => c.PublishAsync(LoraDeviceManagerConstants.ClearCacheMethodName, It.Is<LnsRemoteCall>(r => r.Kind == RemoteCallKind.ClearCache)), Times.Once());
         }
 
         [Fact]
@@ -69,12 +77,12 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                 .ReturnsAsync(new CloudToDeviceMethodResult() { Status = 200 });
 
             //act
-            await this.clearLnsCache.ClearLnsCacheInternalAsync(default);
+            await this.clearNetworkServerCacheFunction.ClearLnsCacheInternalAsync(default);
 
             //assert
             this.serviceClient.VerifyNoOtherCalls();
 
-            this.channelPublisher.Verify(c => c.PublishAsync(LoraKeysManagerFacadeConstants.ClearCacheMethodName,
+            this.channelPublisher.Verify(c => c.PublishAsync(LoraDeviceManagerConstants.ClearCacheMethodName,
                                                              It.Is<LnsRemoteCall>(r => r.Kind == RemoteCallKind.ClearCache)), Times.Once());
         }
     }

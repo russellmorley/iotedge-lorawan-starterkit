@@ -9,6 +9,7 @@ namespace LoRaWan.NetworkServer.BasicsStation
     using System.Threading.Tasks;
     using Jacob;
     using LoRaTools.Regions;
+    using LoRaTools.Services;
     using LoRaTools.Utils;
     using LoRaWan.NetworkServer.BasicsStation.JsonHandlers;
     using Microsoft.Azure.Devices.Shared;
@@ -32,12 +33,12 @@ namespace LoRaWan.NetworkServer.BasicsStation
 
         private static readonly TimeSpan CacheTimeout = TimeSpan.FromHours(2);
         private readonly SemaphoreSlim cacheSemaphore = new SemaphoreSlim(1);
-        private readonly LoRaDeviceAPIServiceBase loRaDeviceApiService;
+        private readonly LoraDeviceManagerServicesBase loRaDeviceApiService;
         private readonly ILoRaDeviceFactory loRaDeviceFactory;
         private readonly IMemoryCache cache;
         private readonly ILogger<BasicsStationConfigurationService> logger;
 
-        public BasicsStationConfigurationService(LoRaDeviceAPIServiceBase loRaDeviceApiService,
+        public BasicsStationConfigurationService(LoraDeviceManagerServicesBase loRaDeviceApiService,
                                                  ILoRaDeviceFactory loRaDeviceFactory,
                                                  IMemoryCache cache,
                                                  ILogger<BasicsStationConfigurationService> logger)

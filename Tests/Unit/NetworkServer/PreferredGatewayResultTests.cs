@@ -7,6 +7,8 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 {
     using Newtonsoft.Json;
     using Xunit;
+    using global::LoRaTools.CacheStore;
+    using global::LoRaTools.FunctionBundler;
 
     public sealed class PreferredGatewayResultTests
     {
@@ -14,10 +16,10 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         public void Can_Deserialize()
         {
             // arrange
-            var input = new global::LoraKeysManagerFacade.PreferredGatewayResult(12, new global::LoraKeysManagerFacade.LoRaDevicePreferredGateway("gateway", 13));
+            var input = new PreferredGatewayResult(12, new LoRaDevicePreferredGateway("gateway", 13));
 
             // act
-            var result = JsonConvert.DeserializeObject<LoRaWan.NetworkServer.PreferredGatewayResult>(JsonConvert.SerializeObject(input));
+            var result = JsonConvert.DeserializeObject<PreferredGatewayResult>(JsonConvert.SerializeObject(input));
 
             // assert
             Assert.Equal(input.RequestFcntUp, result!.RequestFcntUp);

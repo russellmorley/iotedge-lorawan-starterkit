@@ -11,6 +11,7 @@ namespace LoRaWan.Tests.Integration
     using Common;
     using LoRaTools;
     using LoRaTools.ADR;
+    using LoRaTools.FunctionBundler;
     using LoRaTools.LoRaMessage;
     using LoRaTools.LoRaPhysical;
     using LoRaWan.NetworkServer;

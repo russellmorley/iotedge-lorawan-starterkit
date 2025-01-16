@@ -9,7 +9,9 @@ namespace LoRaWan.Tests.Integration
     using System.Threading;
     using System.Threading.Tasks;
     using LoRaTools;
+    using LoRaTools.FunctionBundler;
     using LoRaTools.LoRaMessage;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
@@ -18,7 +20,6 @@ namespace LoRaWan.Tests.Integration
     using Moq;
     using Xunit;
     using Xunit.Abstractions;
-    using IoTHubDeviceInfo = NetworkServer.IoTHubDeviceInfo;
 
     // End to end tests without external dependencies (IoT Hub, Service Facade Function)
     // General message processor tests (Join tests are handled in other class)
@@ -643,7 +644,7 @@ namespace LoRaWan.Tests.Integration
             LoRaDeviceApi.SetupSequence(x => x.SearchByDevAddrAsync(devAddr))
                 .ReturnsAsync(new SearchDevicesResult())
                 .ReturnsAsync(new SearchDevicesResult())
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEUI, "abc").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEUI, "abc").AsList()));
 
             // Making the function bundler return a processable message only for multigw scenario
             LoRaDeviceApi
@@ -835,7 +836,7 @@ namespace LoRaWan.Tests.Integration
 
             // Lora device api will be search by devices with matching deveui,
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEui, "aabb").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEui, "aabb").AsList()));
 
             // Making the function bundler return a processable message only for multigw scenario
             if (deviceGatewayID is null)
@@ -930,7 +931,7 @@ namespace LoRaWan.Tests.Integration
 
             // will search for the device twice
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(loRaDevice.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(loRaDevice.DevAddr, loRaDevice.DevEUI, "aaa").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(loRaDevice.DevAddr, loRaDevice.DevEUI, "aaa").AsList()));
 
             // Send to message processor
             await using var messageDispatcherDisposableValue = SetupMessageDispatcherAsync(isAlreadyInDeviceRegistryCache ? loRaDevice : null);
@@ -993,7 +994,7 @@ namespace LoRaWan.Tests.Integration
 
             // will search for the device twice
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(loRaDevice.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(loRaDevice.DevAddr, loRaDevice.DevEUI, "aaa").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(loRaDevice.DevAddr, loRaDevice.DevEUI, "aaa").AsList()));
 
             // Send to message processor
             await using var messageDispatcherDisposableValue = SetupMessageDispatcherAsync();
@@ -1179,8 +1180,8 @@ namespace LoRaWan.Tests.Integration
             // device api will be searched for payload
             var searchDevicesResult = new SearchDevicesResult(new[]
             {
-                new IoTHubDeviceInfo(simulatedDevice.DevAddr, simulatedDevice.DevEUI, "device1"),
-                new IoTHubDeviceInfo(simulatedDevice.DevAddr, simulatedDevice.DevEUI, "device2"),
+                new IoTHubDeviceServiceInfo(simulatedDevice.DevAddr, simulatedDevice.DevEUI, "device1"),
+                new IoTHubDeviceServiceInfo(simulatedDevice.DevAddr, simulatedDevice.DevEUI, "device2"),
             });
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
@@ -1278,8 +1279,8 @@ namespace LoRaWan.Tests.Integration
             // device api will be searched for payload
             var searchDevicesResult = new SearchDevicesResult(new[]
             {
-                new IoTHubDeviceInfo(simulatedDevice1.DevAddr, simulatedDevice1.DevEUI, "device1"),
-                new IoTHubDeviceInfo(simulatedDevice2.DevAddr, simulatedDevice2.DevEUI, "device2"),
+                new IoTHubDeviceServiceInfo(simulatedDevice1.DevAddr, simulatedDevice1.DevEUI, "device1"),
+                new IoTHubDeviceServiceInfo(simulatedDevice2.DevAddr, simulatedDevice2.DevEUI, "device2"),
             });
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
@@ -1388,8 +1389,8 @@ namespace LoRaWan.Tests.Integration
             // device api will be searched for payload
             var searchDevicesResult = new SearchDevicesResult(new[]
             {
-                new IoTHubDeviceInfo(simulatedDevice1.DevAddr, simulatedDevice1.DevEUI, "device1"),
-                new IoTHubDeviceInfo(simulatedDevice2.DevAddr, simulatedDevice2.DevEUI, "device2"),
+                new IoTHubDeviceServiceInfo(simulatedDevice1.DevAddr, simulatedDevice1.DevEUI, "device1"),
+                new IoTHubDeviceServiceInfo(simulatedDevice2.DevAddr, simulatedDevice2.DevEUI, "device2"),
             });
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(devAddr))
@@ -1550,7 +1551,7 @@ namespace LoRaWan.Tests.Integration
             };
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(simDevice.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
 
             LoRaDeviceClient.SetupSequence(x => x.GetTwinAsync(CancellationToken.None))
                 .ThrowsAsync(new TimeoutException())
@@ -1593,7 +1594,7 @@ namespace LoRaWan.Tests.Integration
             var simDevice = new SimulatedDevice(TestDeviceInfo.CreateABPDevice(1, gatewayID: gatewayID));
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(simDevice.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(simDevice.DevAddr, simDevice.DevEUI, "123").AsList()));
 
             if (string.IsNullOrEmpty(gatewayID))
             {

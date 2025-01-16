@@ -5,8 +5,9 @@ namespace LoRaWan.Tests.Integration
 {
     using System;
     using System.Threading.Tasks;
-    using LoraKeysManagerFacade;
-    using LoraKeysManagerFacade.FunctionBundler;
+    using LoraDeviceManager.FunctionBundler;
+    using LoRaTools.CacheStore;
+    using LoRaTools.FunctionBundler;
     using LoRaWan.Tests.Common;
     using Xunit;
     using Xunit.Abstractions;
@@ -15,19 +16,17 @@ namespace LoRaWan.Tests.Integration
     /// Tests to run against a real redis instance.
     /// </summary>
     [Collection(RedisFixture.CollectionName)]
-#pragma warning disable xUnit1033 // False positive: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
     public class PreferredGatewayTestWithRedis : IClassFixture<RedisFixture>
-#pragma warning restore xUnit1033 // False positive: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
     {
-        private readonly ILoRaDeviceCacheStore cache;
+        private readonly ICacheStore cacheStore;
         private readonly PreferredGatewayExecutionItem preferredGatewayExecutionItem;
 
         public PreferredGatewayTestWithRedis(RedisFixture redis, ITestOutputHelper testOutputHelper)
         {
             if (redis is null) throw new ArgumentNullException(nameof(redis));
 
-            this.cache = new LoRaDeviceCacheRedisStore(redis.Database);
-            this.preferredGatewayExecutionItem = new PreferredGatewayExecutionItem(this.cache, new TestOutputLogger<PreferredGatewayExecutionItem>(testOutputHelper), null);
+            this.cacheStore = new LoRaDeviceCacheRedisStore(redis.Database);
+            this.preferredGatewayExecutionItem = new PreferredGatewayExecutionItem(this.cacheStore, new TestOutputLogger<PreferredGatewayExecutionItem>(testOutputHelper), null);
         }
 
         [Fact]

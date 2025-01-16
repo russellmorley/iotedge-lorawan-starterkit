@@ -7,6 +7,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     using System.Diagnostics.Metrics;
     using System.Threading;
     using System.Threading.Tasks;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -93,7 +94,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         private static LoRaDeviceCache CreateDefaultCache()
             => LoRaDeviceCacheDefault.CreateDefault();
 
-        private readonly IoTHubDeviceInfo defaultDeviceInfo = new IoTHubDeviceInfo
+        private readonly IoTHubDeviceServiceInfo defaultDeviceInfo = new IoTHubDeviceServiceInfo
         {
             DevEUI = new DevEui(1),
             PrimaryKey = "AAAA",
@@ -125,7 +126,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 
             internal Mock<ILoRaDeviceClient> LastDeviceClientMock { get; private set; }
 
-            protected override LoRaDevice CreateDevice(IoTHubDeviceInfo deviceInfo)
+            protected override LoRaDevice CreateDevice(IoTHubDeviceServiceInfo deviceInfo)
             {
                 var connectionManager = new Mock<ILoRaDeviceClientConnectionManager>();
                 var device = new Mock<LoRaDevice>(deviceInfo.DevAddr, deviceInfo.DevEUI, connectionManager.Object);

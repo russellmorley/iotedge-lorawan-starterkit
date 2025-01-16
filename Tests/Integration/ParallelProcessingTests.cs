@@ -9,6 +9,8 @@ namespace LoRaWan.Tests.Integration
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using LoRaTools.FunctionBundler;
+    using LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Client;
@@ -171,7 +173,7 @@ namespace LoRaWan.Tests.Integration
                     var duration = parallelTestConfiguration.SearchByDevAddrDuration.Next();
                     Console.WriteLine($"{nameof(LoRaDeviceApi.Object.SearchByDevAddrAsync)} sleeping for {duration}");
                     return Task.Delay(duration)
-                        .ContinueWith((a) => new SearchDevicesResult(new IoTHubDeviceInfo(devAddr, devEui, "abc").AsList()),
+                        .ContinueWith((a) => new SearchDevicesResult(new IoTHubDeviceServiceInfo(devAddr, devEui, "abc").AsList()),
                                       CancellationToken.None,
                                       TaskContinuationOptions.ExecuteSynchronously,
                                       TaskScheduler.Default);
@@ -293,10 +295,10 @@ namespace LoRaWan.Tests.Integration
             var device4 = new SimulatedDevice(TestDeviceInfo.CreateABPDevice(4));
             var device4Twin = device4.GetDefaultAbpTwin();
 
-            var device1And2Result = new IoTHubDeviceInfo[]
+            var device1And2Result = new IoTHubDeviceServiceInfo[]
             {
-                new IoTHubDeviceInfo(device1.DevAddr, device1.DevEUI, "1"),
-                new IoTHubDeviceInfo(device2.DevAddr, device2.DevEUI, "2"),
+                new IoTHubDeviceServiceInfo(device1.DevAddr, device1.DevEUI, "1"),
+                new IoTHubDeviceServiceInfo(device2.DevAddr, device2.DevEUI, "2"),
             };
 
             LoRaDeviceApi
@@ -313,10 +315,10 @@ namespace LoRaWan.Tests.Integration
                 .ReturnsAsync(new SearchDevicesResult(device1And2Result), TimeSpan.FromMilliseconds(searchDelay));
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(device3.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(device3.DevAddr, device3.DevEUI, "3").AsList()), TimeSpan.FromMilliseconds(searchDelay));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(device3.DevAddr, device3.DevEUI, "3").AsList()), TimeSpan.FromMilliseconds(searchDelay));
 
             LoRaDeviceApi.Setup(x => x.SearchByDevAddrAsync(device4.DevAddr.Value))
-                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceInfo(device4.DevAddr, device4.DevEUI, "3").AsList()), TimeSpan.FromMilliseconds(searchDelay));
+                .ReturnsAsync(new SearchDevicesResult(new IoTHubDeviceServiceInfo(device4.DevAddr, device4.DevEUI, "3").AsList()), TimeSpan.FromMilliseconds(searchDelay));
 
             var deviceClient1 = new Mock<ILoRaDeviceClient>();
             var deviceClient1Telemetry = new List<LoRaDeviceTelemetry>();

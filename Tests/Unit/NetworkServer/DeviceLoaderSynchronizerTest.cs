@@ -7,6 +7,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Caching.Memory;
@@ -36,7 +37,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         {
             var devAddr = new DevAddr(0x039090);
 
-            var apiService = new Mock<LoRaDeviceAPIServiceBase>(MockBehavior.Strict);
+            var apiService = new Mock<LoraDeviceManagerServicesBase>(MockBehavior.Strict);
             apiService.Setup(x => x.SearchByDevAddrAsync(It.IsAny<DevAddr>()))
                 .Throws(new InvalidOperationException());
 
@@ -70,7 +71,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             var devAddr = simulatedDevice.DevAddr.Value;
             var payload1 = simulatedDevice.CreateUnconfirmedDataUpMessage("1");
 
-            var apiService = new Mock<LoRaDeviceAPIServiceBase>();
+            var apiService = new Mock<LoraDeviceManagerServicesBase>();
             var searchMock = apiService.Setup(x => x.SearchByDevAddrAsync(devAddr));
             if (loadDevicesDurationInMs > 0)
             {
@@ -119,8 +120,8 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             var simulatedDevice = new SimulatedDevice(TestDeviceInfo.CreateABPDevice(1, gatewayID: gatewayId));
             var payload = simulatedDevice.CreateUnconfirmedDataUpMessage("1234");
 
-            var apiService = new Mock<LoRaDeviceAPIServiceBase>();
-            var iotHubDeviceInfo = new IoTHubDeviceInfo(simulatedDevice.LoRaDevice.DevAddr, simulatedDevice.LoRaDevice.DevEui, "pk")
+            var apiService = new Mock<LoraDeviceManagerServicesBase>();
+            var iotHubDeviceInfo = new IoTHubDeviceServiceInfo(simulatedDevice.LoRaDevice.DevAddr, simulatedDevice.LoRaDevice.DevEui, "pk")
             {
                 GatewayId = gatewayId,
                 NwkSKey = simulatedDevice.NwkSKey.Value
@@ -162,8 +163,8 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             var simulatedDevice = new SimulatedDevice(TestDeviceInfo.CreateABPDevice(1, gatewayID: "a_different_one"));
             var payload = simulatedDevice.CreateUnconfirmedDataUpMessage("1234");
 
-            var apiService = new Mock<LoRaDeviceAPIServiceBase>();
-            var iotHubDeviceInfo = new IoTHubDeviceInfo(simulatedDevice.LoRaDevice.DevAddr, simulatedDevice.LoRaDevice.DevEui, "pk")
+            var apiService = new Mock<LoraDeviceManagerServicesBase>();
+            var iotHubDeviceInfo = new IoTHubDeviceServiceInfo(simulatedDevice.LoRaDevice.DevAddr, simulatedDevice.LoRaDevice.DevEui, "pk")
             {
                 GatewayId = "a_different_one",
                 NwkSKey = simulatedDevice.NwkSKey.Value
@@ -213,8 +214,8 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         {
             var simulatedDevice = new SimulatedDevice(TestDeviceInfo.CreateABPDevice(1, gatewayID: deviceGatewayID));
 
-            var apiService = new Mock<LoRaDeviceAPIServiceBase>();
-            var iotHubDeviceInfo = new IoTHubDeviceInfo(simulatedDevice.LoRaDevice.DevAddr, simulatedDevice.LoRaDevice.DevEui, "pk");
+            var apiService = new Mock<LoraDeviceManagerServicesBase>();
+            var iotHubDeviceInfo = new IoTHubDeviceServiceInfo(simulatedDevice.LoRaDevice.DevAddr, simulatedDevice.LoRaDevice.DevEui, "pk");
             apiService.Setup(x => x.SearchByDevAddrAsync(It.IsAny<DevAddr>()))
                 .ReturnsAsync(new SearchDevicesResult(iotHubDeviceInfo.AsList()));
 
@@ -329,7 +330,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
             request.Verify(x => x.NotifyFailed(reason, It.IsAny<Exception>()), Times.Once);
 
         private static TestDeviceLoaderSynchronizer CreateDefaultLoader(LoRaRequest request, LoRaDeviceCache deviceCache) =>
-            new TestDeviceLoaderSynchronizer(Mock.Of<LoRaDeviceAPIServiceBase>(),
+            new TestDeviceLoaderSynchronizer(Mock.Of<LoraDeviceManagerServicesBase>(),
                                              Mock.Of<ILoRaDeviceFactory>(),
                                              deviceCache,
                                              request);
@@ -346,7 +347,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 
         private class TestDeviceLoaderSynchronizer : DeviceLoaderSynchronizer
         {
-            internal TestDeviceLoaderSynchronizer(LoRaDeviceAPIServiceBase loRaDeviceAPIService,
+            internal TestDeviceLoaderSynchronizer(LoraDeviceManagerServicesBase loRaDeviceAPIService,
                                                   ILoRaDeviceFactory deviceFactory,
                                                   LoRaDeviceCache deviceCache,
                                                   LoRaRequest loRaRequest)
@@ -377,7 +378,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 
             var deviceLoader = new TestDeviceLoaderSynchronizer(new DevAddr(0), null, null, deviceCache);
 
-            await deviceLoader.ExecuteCreateDevicesAsync(new[] { new IoTHubDeviceInfo { DevAddr = new DevAddr(0x456), DevEUI = devEui } });
+            await deviceLoader.ExecuteCreateDevicesAsync(new[] { new IoTHubDeviceServiceInfo { DevAddr = new DevAddr(0x456), DevEUI = devEui } });
 
             loRaDevice.Verify(x => x.InitializeAsync(It.IsAny<NetworkServerConfiguration>(), CancellationToken.None), Times.Once);
             loRaDevice.Verify(x => x.CloseConnectionAsync(CancellationToken.None, false), Times.Once);
@@ -399,7 +400,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 
             var deviceLoader = new TestDeviceLoaderSynchronizer(new DevAddr(0), null, null, deviceCache);
 
-            await deviceLoader.ExecuteCreateDevicesAsync(new[] { new IoTHubDeviceInfo { DevAddr = cachedDevAddrMatchesIoTHubInfo ? devAddr : new DevAddr(0x789), DevEUI = devEui } });
+            await deviceLoader.ExecuteCreateDevicesAsync(new[] { new IoTHubDeviceServiceInfo { DevAddr = cachedDevAddrMatchesIoTHubInfo ? devAddr : new DevAddr(0x789), DevEUI = devEui } });
 
             loRaDevice.Verify(x => x.InitializeAsync(It.IsAny<NetworkServerConfiguration>(), CancellationToken.None), Times.Never);
             loRaDevice.Verify(x => x.CloseConnectionAsync(CancellationToken.None, false), Times.Once);
@@ -418,7 +419,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 
             var deviceLoader = new TestDeviceLoaderSynchronizer(new DevAddr(0), null, null, deviceCache);
 
-            await deviceLoader.ExecuteCreateDevicesAsync(new[] { new IoTHubDeviceInfo { DevAddr = new DevAddr(0x456), DevEUI = devEui } });
+            await deviceLoader.ExecuteCreateDevicesAsync(new[] { new IoTHubDeviceServiceInfo { DevAddr = new DevAddr(0x456), DevEUI = devEui } });
 
             loRaDevice.Verify(x => x.InitializeAsync(It.IsAny<NetworkServerConfiguration>(), CancellationToken.None), Times.Once);
             loRaDevice.Verify(x => x.CloseConnectionAsync(CancellationToken.None, false), Times.Once);
@@ -441,7 +442,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 
             // setting up the ILoRaDeviceFactory mock so that CreateAndRegister returns above LoRaDevice
             var deviceFactory = new Mock<ILoRaDeviceFactory>();
-            deviceFactory.Setup(x => x.CreateAndRegisterAsync(It.IsAny<IoTHubDeviceInfo>(), It.IsAny<CancellationToken>()))
+            deviceFactory.Setup(x => x.CreateAndRegisterAsync(It.IsAny<IoTHubDeviceServiceInfo>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(loRaDevice.Object);
 
             // setting up one ILoRaDeviceInitializer to throw
@@ -456,7 +457,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
                                                                 deviceCache,
                                                                 new HashSet<ILoRaDeviceInitializer> { failingInitializer.Object });
             // acting and asserting that the method throws
-            var iotHubDevicesInfo = new[] { new IoTHubDeviceInfo { DevAddr = devAddr, DevEUI = devEui } };
+            var iotHubDevicesInfo = new[] { new IoTHubDeviceServiceInfo { DevAddr = devAddr, DevEUI = devEui } };
             var actualException = await Assert.ThrowsAsync<AggregateException>(() => deviceLoader.ExecuteCreateDevicesAsync(iotHubDevicesInfo));
 
             // asserting that the inner exception of the aggregate exception is actually what was expected
@@ -469,7 +470,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         private class TestDeviceLoaderSynchronizer : DeviceLoaderSynchronizer
         {
             internal TestDeviceLoaderSynchronizer(DevAddr devAddr,
-                                                  LoRaDeviceAPIServiceBase loRaDeviceAPIService,
+                                                  LoraDeviceManagerServicesBase loRaDeviceAPIService,
                                                   ILoRaDeviceFactory deviceFactory,
                                                   LoRaDeviceCache deviceCache = null,
                                                   HashSet<ILoRaDeviceInitializer> initializers = null)
@@ -478,7 +479,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 #pragma warning restore CA2000
             { }
 
-            internal Task ExecuteCreateDevicesAsync(IReadOnlyList<IoTHubDeviceInfo> devices) => CreateDevicesAsync(devices);
+            internal Task ExecuteCreateDevicesAsync(IReadOnlyList<IoTHubDeviceServiceInfo> devices) => CreateDevicesAsync(devices);
         }
     }
 }

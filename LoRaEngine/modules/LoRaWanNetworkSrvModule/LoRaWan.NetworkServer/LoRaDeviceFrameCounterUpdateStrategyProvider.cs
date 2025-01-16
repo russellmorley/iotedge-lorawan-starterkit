@@ -3,6 +3,7 @@
 
 namespace LoRaWan.NetworkServer
 {
+    using LoRaTools.Services;
     using System;
 
     public class LoRaDeviceFrameCounterUpdateStrategyProvider : ILoRaDeviceFrameCounterUpdateStrategyProvider
@@ -12,7 +13,7 @@ namespace LoRaWan.NetworkServer
         private readonly SingleGatewayFrameCounterUpdateStrategy singleGateway;
 
         public LoRaDeviceFrameCounterUpdateStrategyProvider(NetworkServerConfiguration networkServerConfiguration,
-                                                            LoRaDeviceAPIServiceBase loRaDeviceAPIService)
+                                                            LoraDeviceManagerServicesBase loRaDeviceAPIService)
         {
             if (networkServerConfiguration is null) throw new ArgumentNullException(nameof(networkServerConfiguration));
 

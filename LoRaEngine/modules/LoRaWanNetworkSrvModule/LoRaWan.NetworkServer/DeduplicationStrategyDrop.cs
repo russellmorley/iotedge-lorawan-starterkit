@@ -4,6 +4,7 @@
 namespace LoRaWan.NetworkServer
 {
     using System;
+    using LoRaTools.FunctionBundler;
     using Microsoft.Extensions.Logging;
 
     public class DeduplicationStrategyDrop : ILoRaDeviceMessageDeduplicationStrategy

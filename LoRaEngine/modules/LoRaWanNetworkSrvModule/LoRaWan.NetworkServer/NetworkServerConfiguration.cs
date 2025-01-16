@@ -66,6 +66,16 @@ namespace LoRaWan.NetworkServer
         /// Gets or sets the Azure Facade Function auth code.
         /// </summary>
         public string FacadeAuthCode { get; set; }
+        
+        /// <summary>
+        /// Gets ir sets the Azure Facade Function tenant id.
+        /// </summary>
+        public string TenantId { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the Azure Facade Function tenant id signature.
+        /// </summary>
+        public string TenantKey { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether logging to console is enabled.
@@ -152,6 +162,8 @@ namespace LoRaWan.NetworkServer
         /// </summary>
         public int ProcessingDelayInMilliseconds { get; set; } = Constants.DefaultProcessingDelayInMilliseconds;
 
+        public bool ServiceValidatesTenant { get; set; }
+
         // Creates a new instance of NetworkServerConfiguration by reading values from environment variables
         public static NetworkServerConfiguration CreateFromEnvironmentVariables()
         {
@@ -161,6 +173,7 @@ namespace LoRaWan.NetworkServer
             var envVars = new CaseInsensitiveEnvironmentVariables(Environment.GetEnvironmentVariables());
             config.ProcessingDelayInMilliseconds = envVars.GetEnvVar("PROCESSING_DELAY_IN_MS", config.ProcessingDelayInMilliseconds);
             config.IsLocalDevelopment = envVars.GetEnvVar("LOCAL_DEVELOPMENT", false);
+            config.ServiceValidatesTenant = envVars.GetEnvVar("SERVICE_VALIDATES_TENANT", false);
             // We disable IoT Edge runtime either when we run in the cloud or during local development.
             config.RunningAsIoTEdgeModule = !(envVars.GetEnvVar("CLOUD_DEPLOYMENT", false) || config.IsLocalDevelopment);
             var iotHubHostName = envVars.GetEnvVar("IOTEDGE_IOTHUBHOSTNAME", envVars.GetEnvVar("IOTHUBHOSTNAME", string.Empty));
@@ -185,6 +198,8 @@ namespace LoRaWan.NetworkServer
             var facadeUrl = envVars.GetEnvVar("FACADE_SERVER_URL", string.Empty);
             config.FacadeServerUrl = string.IsNullOrEmpty(facadeUrl) ? null : new Uri(envVars.GetEnvVar("FACADE_SERVER_URL", string.Empty));
             config.FacadeAuthCode = envVars.GetEnvVar("FACADE_AUTH_CODE", string.Empty);
+            config.TenantId = envVars.GetEnvVar("TENANT_ID", string.Empty);
+            config.TenantKey = envVars.GetEnvVar("TENANT_KEY", string.Empty);
             config.LogLevel = envVars.GetEnvVar("LOG_LEVEL", config.LogLevel);
             config.LogToConsole = envVars.GetEnvVar("LOG_TO_CONSOLE", config.LogToConsole);
             config.LogToTcp = envVars.GetEnvVar("LOG_TO_TCP", config.LogToTcp);

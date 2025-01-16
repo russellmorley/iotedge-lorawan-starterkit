@@ -10,5 +10,6 @@ namespace LoRaTools
         string ETag { get; }
 
         ITwinPropertiesContainer Properties { get; }
+        string GetTag(string tag);
     }
 }

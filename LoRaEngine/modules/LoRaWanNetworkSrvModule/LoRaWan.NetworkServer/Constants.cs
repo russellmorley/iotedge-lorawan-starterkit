@@ -54,6 +54,10 @@ namespace LoRaWan.NetworkServer
 
         public const string FacadeServerAuthCodeKey = "FacadeAuthCode";
 
+        public const string TenantId = "tenantId";
+
+        public const string TenantKey = "tenantkey";
+
         /// <summary>
         /// Log message used to indicate that the same upstream message has already been encountered.
         /// </summary>

@@ -4,6 +4,8 @@
 namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
 {
     using System.Threading.Tasks;
+    using global::LoRaTools.FunctionBundler;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -22,7 +24,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             await using var loRaDevice = TestUtils.CreateFromSimulatedDevice(device, new Mock<ILoRaDeviceClientConnectionManager>().Object);
             var payload = device.CreateConfirmedDataUpMessage("foo");
             using var request = WaitableLoRaRequest.Create(TestUtils.GenerateTestRadioMetadata(rssi: rssi), payload);
-            var deviceApiServiceMock = new Mock<LoRaDeviceAPIServiceBase>();
+            var deviceApiServiceMock = new Mock<LoraDeviceManagerServicesBase>();
             deviceApiServiceMock.Setup(s => s.ExecuteFunctionBundlerAsync(It.IsAny<DevEui>(), It.IsAny<FunctionBundlerRequest>())).ReturnsAsync(new FunctionBundlerResult());
             var subject = new FunctionBundlerProvider(deviceApiServiceMock.Object, NullLoggerFactory.Instance, NullLogger<FunctionBundlerProvider>.Instance);
 

@@ -11,14 +11,17 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
     using Azure;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
-    using global::LoraKeysManagerFacade;
+    using global::LoraKeysManagerFacade.LoraDeviceManagerServices;
     using global::LoRaTools;
+    using global::LoRaTools.AzureBlobStorage;
     using global::LoRaTools.IoTHubImpl;
+    using global::LoRaTools.Version;
+    using LoraDeviceManager;
+    using LoraDeviceManager.Services;
     using LoRaWan.Tests.Common;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.Devices.Shared;
-    using Microsoft.Extensions.Azure;
     using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.Extensions.Primitives;
     using Moq;
@@ -32,7 +35,8 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
 
         private readonly Mock<IDeviceRegistryManager> registryManager;
         private readonly Mock<BlobClient> blobClient;
-        private readonly ConcentratorFirmwareFunction concentratorFirmware;
+        private readonly FetchConcentratorFirmwareFunction fetchConcentratorFirwareFunction;
+        private readonly LoraDeviceManagerServices loraDeviceManagerServices;
 
         public ConcentratorFirmwareFunctionTests()
         {
@@ -48,24 +52,32 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             blobServiceClient.Setup(m => m.GetBlobContainerClient(It.IsAny<string>()))
                              .Returns(Response.FromValue(blobContainerClient.Object, blobContainerClientResponseMock.Object));
 
-            var azureClientFactory = new Mock<IAzureClientFactory<BlobServiceClient>>();
-            azureClientFactory.Setup(m => m.CreateClient(Globals.WebJobsStorageClientName))
-                              .Returns(blobServiceClient.Object);
-
             this.registryManager = new Mock<IDeviceRegistryManager>();
 
-            this.concentratorFirmware = new ConcentratorFirmwareFunction(this.registryManager.Object, azureClientFactory.Object, NullLogger<ConcentratorFirmwareFunction>.Instance);
+
+            var blobStorageManager = AzureBlobStorageManager.CreateWithProvider(() =>
+                blobServiceClient.Object,
+                NullLogger<AzureBlobStorageManager>.Instance);
+
+            var loraDeviceManager = new LoraDeviceManagerImpl(this.registryManager.Object, null, blobStorageManager, null, null, NullLogger<LoraDeviceManagerImpl>.Instance);
+            this.fetchConcentratorFirwareFunction = new FetchConcentratorFirmwareFunction(
+                loraDeviceManager,
+                new TestNoValidateTenantStrategy(), 
+                NullLogger<FetchConcentratorFirmwareFunction>.Instance);
+            this.loraDeviceManagerServices = new LoraDeviceManagerServices(loraDeviceManager, NullLogger<LoraDeviceManagerServices>.Instance, null);
+
         }
 
         [Fact]
         public async Task RunFetchConcentratorFirmware_Succeeds()
         {
-            var httpRequest = new Mock<HttpRequest>();
+            var httpRequest = new DefaultHttpContext().Request;
             var queryCollection = new QueryCollection(new Dictionary<string, StringValues>()
             {
+                { ApiVersion.QueryStringParamName, ApiVersion.LatestVersion.Name },
                 { "StationEui", new StringValues(this.testStationEui.ToString()) }
             });
-            httpRequest.SetupGet(x => x.Query).Returns(queryCollection);
+            httpRequest.Query = queryCollection;
 
             var twin = new Twin();
             twin.Properties.Desired = new TwinCollection(JsonUtil.Strictify(/*lang=json*/ @"{'cups': {
@@ -83,29 +95,41 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.blobClient.Setup(m => m.DownloadStreamingAsync(It.IsAny<BlobDownloadOptions>(), It.IsAny<CancellationToken>()))
                            .Returns(Task.FromResult(Response.FromValue(streamingResult, new Mock<Response>().Object)));
 
-            this.blobClient.Setup(m => m.GetPropertiesAsync(null, It.IsAny<CancellationToken>()))
-                           .Returns(Task.FromResult(Response.FromValue(new BlobProperties(), new Mock<Response>().Object)));
+            var blobProperties = BlobsModelFactory.BlobProperties(contentLength: BlobContent.Length);
 
-            var actual = await this.concentratorFirmware.RunFetchConcentratorFirmware(httpRequest.Object, CancellationToken.None);
+            this.blobClient.Setup(m => m.GetPropertiesAsync(null, It.IsAny<CancellationToken>()))
+                           .Returns(Task.FromResult(Response.FromValue(blobProperties, new Mock<Response>().Object)));
+
+            var actual = await this.fetchConcentratorFirwareFunction.FetchConcentratorFirmware(httpRequest, CancellationToken.None);
 
             Assert.NotNull(actual);
             var result = Assert.IsType<FileStreamWithContentLengthResult>(actual);
 
-            result.FileStream.Position = 0;
+            //result.FileStream.Position = 0;
             using var reader = new StreamReader(result.FileStream);
             var fileContents = await reader.ReadToEndAsync();
             Assert.Equal(BlobContent, fileContents);
+
+            var httpContentDirect = await loraDeviceManagerServices.FetchStationFirmwareAsync(testStationEui, default);
+            Assert.NotNull(httpContentDirect);
+            var streamCopy = new MemoryStream();
+            await httpContentDirect.CopyToAsync(streamCopy);
+            var contents = Encoding.UTF8.GetString(streamCopy.ToArray());
+            Assert.Equal(BlobContent, contents);
+            Assert.True(httpContentDirect.Headers.ContentLength > 0);
+
         }
 
         [Fact]
         public async Task RunFetchConcentratorFirmware_Returns_NotFound_ForMissingTwin()
         {
-            var httpRequest = new Mock<HttpRequest>();
+            var httpRequest = new DefaultHttpContext().Request;
             var queryCollection = new QueryCollection(new Dictionary<string, StringValues>()
             {
+                { ApiVersion.QueryStringParamName, ApiVersion.LatestVersion.Name },
                 { "StationEui", new StringValues(this.testStationEui.ToString()) }
             });
-            httpRequest.SetupGet(x => x.Query).Returns(queryCollection);
+            httpRequest.Query = queryCollection;
 
             var twin = new Twin();
             twin.Properties.Desired = new TwinCollection(JsonUtil.Strictify(/*lang=json*/ @"{'cups': {
@@ -117,7 +141,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(m => m.GetTwinAsync("AnotherTwin", It.IsAny<CancellationToken>()))
                                 .Returns(Task.FromResult<IDeviceTwin>(new IoTHubDeviceTwin(twin)));
 
-            var result = await this.concentratorFirmware.RunFetchConcentratorFirmware(httpRequest.Object, CancellationToken.None);
+            var result = await this.fetchConcentratorFirwareFunction.FetchConcentratorFirmware(httpRequest, CancellationToken.None);
 
             Assert.NotNull(result);
             Assert.IsType<NotFoundResult>(result);
@@ -126,12 +150,15 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         [Fact]
         public async Task RunFetchConcentratorFirmware_Returns_BadRequest_ForMissingQueryParams()
         {
-            var httpRequest = new Mock<HttpRequest>();
-            var queryDictionary = new Dictionary<string, StringValues>();
+            var httpRequest = new DefaultHttpContext().Request;
+            var queryDictionary = new Dictionary<string, StringValues>()
+            {
+                { ApiVersion.QueryStringParamName, ApiVersion.LatestVersion.Name }
+            };
             var queryCollection = new QueryCollection(queryDictionary);
-            httpRequest.SetupGet(x => x.Query).Returns(queryCollection);
+            httpRequest.Query = queryCollection;
 
-            var result = await this.concentratorFirmware.RunFetchConcentratorFirmware(httpRequest.Object, CancellationToken.None);
+            var result = await this.fetchConcentratorFirwareFunction.FetchConcentratorFirmware(httpRequest, CancellationToken.None);
 
             Assert.NotNull(result);
             Assert.IsType<BadRequestObjectResult>(result);
@@ -140,19 +167,20 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         [Fact]
         public async Task RunFetchConcentratorFirmware_Returns_InternalServerError_ForTwinMissingCups()
         {
-            var httpRequest = new Mock<HttpRequest>();
+            var httpRequest = new DefaultHttpContext().Request;
             var queryCollection = new QueryCollection(new Dictionary<string, StringValues>()
             {
+                { ApiVersion.QueryStringParamName, ApiVersion.LatestVersion.Name },
                 { "StationEui", new StringValues(this.testStationEui.ToString()) }
             });
-            httpRequest.SetupGet(x => x.Query).Returns(queryCollection);
+            httpRequest.Query = queryCollection;
 
             var twin = new Twin();
             twin.Properties.Desired = new TwinCollection(JsonUtil.Strictify(/*lang=json*/ @"{'a': 'b'}"));
             this.registryManager.Setup(m => m.GetTwinAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                                 .Returns(Task.FromResult<IDeviceTwin>(new IoTHubDeviceTwin(twin)));
 
-            var actual = await this.concentratorFirmware.RunFetchConcentratorFirmware(httpRequest.Object, CancellationToken.None);
+            var actual = await this.fetchConcentratorFirwareFunction.FetchConcentratorFirmware(httpRequest, CancellationToken.None);
 
             var result = Assert.IsType<ObjectResult>(actual);
             Assert.Equal(500, result.StatusCode);
@@ -162,12 +190,13 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         [Fact]
         public async Task RunFetchConcentratorFirmware_Returns_InternalServerError_ForTwinMissingFwUrl()
         {
-            var httpRequest = new Mock<HttpRequest>();
+            var httpRequest = new DefaultHttpContext().Request;
             var queryCollection = new QueryCollection(new Dictionary<string, StringValues>()
             {
+                { ApiVersion.QueryStringParamName, ApiVersion.LatestVersion.Name },
                 { "StationEui", new StringValues(this.testStationEui.ToString()) }
             });
-            httpRequest.SetupGet(x => x.Query).Returns(queryCollection);
+            httpRequest.Query = queryCollection;
 
             var twin = new Twin();
             twin.Properties.Desired = new TwinCollection(JsonUtil.Strictify(/*lang=json*/ @"{'cups': {
@@ -178,7 +207,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(m => m.GetTwinAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
                                 .Returns(Task.FromResult<IDeviceTwin>(new IoTHubDeviceTwin(twin)));
 
-            var actual = await this.concentratorFirmware.RunFetchConcentratorFirmware(httpRequest.Object, CancellationToken.None);
+            var actual = await this.fetchConcentratorFirwareFunction.FetchConcentratorFirmware(httpRequest, CancellationToken.None);
 
             var result = Assert.IsType<ObjectResult>(actual);
             Assert.Equal(500, result.StatusCode);
@@ -188,12 +217,13 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         [Fact]
         public async Task RunFetchConcentratorFirmware_Returns_InternalServerError_WhenDownloadFails()
         {
-            var httpRequest = new Mock<HttpRequest>();
+            var httpRequest = new DefaultHttpContext().Request;
             var queryCollection = new QueryCollection(new Dictionary<string, StringValues>()
             {
+                { ApiVersion.QueryStringParamName, ApiVersion.LatestVersion.Name },
                 { "StationEui", new StringValues(this.testStationEui.ToString()) }
             });
-            httpRequest.SetupGet(x => x.Query).Returns(queryCollection);
+            httpRequest.Query = queryCollection;
 
             var twin = new Twin();
             twin.Properties.Desired = new TwinCollection(JsonUtil.Strictify(/*lang=json*/ @"{'cups': {
@@ -209,7 +239,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                                                                 It.IsAny<CancellationToken>()))
                            .ThrowsAsync(new RequestFailedException("download failed"));
 
-            var actual = await this.concentratorFirmware.RunFetchConcentratorFirmware(httpRequest.Object, CancellationToken.None);
+            var actual = await this.fetchConcentratorFirwareFunction.FetchConcentratorFirmware(httpRequest, CancellationToken.None);
 
             Assert.NotNull(actual);
             var result = Assert.IsType<ObjectResult>(actual);

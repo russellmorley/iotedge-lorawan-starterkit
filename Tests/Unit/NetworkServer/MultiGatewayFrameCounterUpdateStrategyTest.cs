@@ -7,6 +7,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Shared;
@@ -16,7 +17,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
     public sealed class MultiGatewayFrameCounterUpdateStrategyTest : IAsyncDisposable
     {
         private readonly Mock<ILoRaDeviceClient> deviceClient;
-        private readonly Mock<LoRaDeviceAPIServiceBase> deviceApi;
+        private readonly Mock<LoraDeviceManagerServicesBase> deviceApi;
         private readonly string gatewayID;
         private readonly ILoRaDeviceClientConnectionManager connectionManager;
         private readonly LoRaDevice device;
@@ -24,7 +25,7 @@ namespace LoRaWan.Tests.Unit.NetworkServer
         public MultiGatewayFrameCounterUpdateStrategyTest()
         {
             this.deviceClient = new Mock<ILoRaDeviceClient>();
-            this.deviceApi = new Mock<LoRaDeviceAPIServiceBase>(MockBehavior.Strict);
+            this.deviceApi = new Mock<LoraDeviceManagerServicesBase>(MockBehavior.Strict);
             this.gatewayID = "test-gateway";
             this.connectionManager = new SingleDeviceConnectionManager(this.deviceClient.Object);
             this.device = new LoRaDevice(new DevAddr(1), new DevEui(2), connectionManager);

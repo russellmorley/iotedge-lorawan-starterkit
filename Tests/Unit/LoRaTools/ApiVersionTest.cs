@@ -7,9 +7,10 @@ namespace LoRaWan.Tests.Unit.LoRaTools.CommonAPI
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
-    using global::LoraKeysManagerFacade.FunctionBundler;
-    using global::LoRaTools.CommonAPI;
+    using global::LoraKeysManagerFacade.LoraDeviceDownstreamService;
+    using global::LoraKeysManagerFacade.LoraDeviceManagerServices;
+    using global::LoRaTools.Version;
+    using LoraDeviceManager;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Azure.WebJobs;
@@ -29,11 +30,15 @@ namespace LoRaWan.Tests.Unit.LoRaTools.CommonAPI
             var dummyExecContext = new ExecutionContext();
             var apiCalls = new Func<HttpRequest, Task<IActionResult>>[]
             {
-                (req) => new DeviceGetter(null, null, NullLogger<DeviceGetter>.Instance).GetDevice(req),
-                (req) => Task.Run(() => new FCntCacheCheck(null, NullLogger<FCntCacheCheck>.Instance).NextFCntDownInvoke(req)),
-                (req) => Task.Run(() => new FunctionBundlerFunction(Array.Empty<IFunctionBundlerExecutionItem>(), NullLogger<FunctionBundlerFunction>.Instance).FunctionBundler(req, string.Empty)),
-                (req) => new SendCloudToDeviceMessage(null, null, null, null, null, null).Run(req, string.Empty, default),
-                (req) => new ClearLnsCache(null, null, null, NullLogger<ClearLnsCache>.Instance).ClearNetworkServerCache(req, default)
+                (req) => new GetDeviceFunction(null, NullLogger<GetDeviceFunction>.Instance, null, null).GetDevice(req),
+                (req) => Task.Run(() => new NextFCntDownFunction(null, NullLogger<NextFCntDownFunction>.Instance, null).NextFCntDown(req)),
+                (req) => Task.Run(() => new FunctionBundlerFunction(
+                    new LoraDeviceManagerImpl(null, null, null, null, null, NullLogger<LoraDeviceManagerImpl>.Instance),
+                    NullLogger<FunctionBundlerFunction>.Instance, 
+                    null)
+                        .FunctionBundler(req, string.Empty)),
+                (req) => new SendCloudToDeviceMessageFunction(null, null, null, null, null, null).SendCloudToDeviceMessage(req, string.Empty, default),
+                (req) => new ClearNetworkServerCacheFunction(null, null, null, NullLogger<ClearNetworkServerCacheFunction>.Instance).ClearNetworkServerCache(req, default)
             };
 
             foreach (var apiCall in apiCalls)

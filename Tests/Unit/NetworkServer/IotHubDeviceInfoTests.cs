@@ -4,16 +4,17 @@
 namespace LoRaWan.Tests.Unit.NetworkServer
 {
     using System.Linq;
+    using global::LoRaTools.Services;
     using LoRaWan.NetworkServer;
     using LoRaWan.Tests.Common;
     using Newtonsoft.Json;
     using Xunit;
 
-    public class IotHubDeviceInfoTests
+    public class IotHubDeviceServiceInfoTests
     {
-        public static TheoryData<IoTHubDeviceInfo> Serialize_Deserialize_Composition_Should_Preserve_Information_TheoryData() => TheoryDataFactory.From(
+        public static TheoryData<IoTHubDeviceServiceInfo> Serialize_Deserialize_Composition_Should_Preserve_Information_TheoryData() => TheoryDataFactory.From(
             from networkSessionKey in new[] { (NetworkSessionKey?)null, TestKeys.CreateNetworkSessionKey(3) }
-            select new IoTHubDeviceInfo
+            select new IoTHubDeviceServiceInfo
             {
                 DevAddr = new DevAddr(1),
                 DevEUI = new DevEui(2),
@@ -24,10 +25,10 @@ namespace LoRaWan.Tests.Unit.NetworkServer
 
         [Theory]
         [MemberData(nameof(Serialize_Deserialize_Composition_Should_Preserve_Information_TheoryData))]
-        public void Serialize_Deserialize_Composition_Should_Preserve_Information(IoTHubDeviceInfo initial)
+        public void Serialize_Deserialize_Composition_Should_Preserve_Information(IoTHubDeviceServiceInfo initial)
         {
             // act
-            var result = JsonConvert.DeserializeObject<IoTHubDeviceInfo>(JsonConvert.SerializeObject(initial));
+            var result = JsonConvert.DeserializeObject<IoTHubDeviceServiceInfo>(JsonConvert.SerializeObject(initial));
 
             // assert
             Assert.Equal(initial.DevAddr, result.DevAddr);

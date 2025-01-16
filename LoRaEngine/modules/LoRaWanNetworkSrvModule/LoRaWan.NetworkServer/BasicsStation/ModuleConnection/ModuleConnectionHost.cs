@@ -15,12 +15,13 @@ namespace LoRaWan.NetworkServer.BasicsStation.ModuleConnection
     using System.Diagnostics.Metrics;
     using System.Threading;
     using System.Threading.Tasks;
+    using LoRaTools.Services;
 
     internal sealed class ModuleConnectionHost : IAsyncDisposable
     {
         private const string LnsVersionPropertyName = "LnsVersion";
         private readonly NetworkServerConfiguration networkServerConfiguration;
-        private readonly LoRaDeviceAPIServiceBase loRaDeviceAPIService;
+        private readonly LoraDeviceManagerServicesBase loRaDeviceAPIService;
         private readonly ILnsRemoteCallHandler lnsRemoteCallHandler;
         private readonly ILogger<ModuleConnectionHost> logger;
         private readonly Counter<int> unhandledExceptionCount;
@@ -30,7 +31,7 @@ namespace LoRaWan.NetworkServer.BasicsStation.ModuleConnection
         public ModuleConnectionHost(
             NetworkServerConfiguration networkServerConfiguration,
             ILoRaModuleClientFactory loRaModuleClientFactory,
-            LoRaDeviceAPIServiceBase loRaDeviceAPIService,
+            LoraDeviceManagerServicesBase loRaDeviceAPIService,
             ILnsRemoteCallHandler lnsRemoteCallHandler,
             ILogger<ModuleConnectionHost> logger,
             Meter meter)
@@ -186,6 +187,16 @@ namespace LoRaWan.NetworkServer.BasicsStation.ModuleConnection
                     this.logger.LogError("The Facade server Url present in device desired properties was malformed.");
                     throw new ConfigurationErrorsException(nameof(desiredProperties));
                 }
+            }
+
+            if (reader.TryRead<string>(NetworkServer.Constants.TenantId, out var tenantId))
+            {
+                loRaDeviceAPIService.TenantId = tenantId;
+                if (reader.TryRead<string>(NetworkServer.Constants.TenantKey, out var tenantKey))
+                {
+                    this.loRaDeviceAPIService.TenantKey = tenantKey;
+                }
+                return true;
             }
 
             this.logger.LogDebug("no desired property changed");

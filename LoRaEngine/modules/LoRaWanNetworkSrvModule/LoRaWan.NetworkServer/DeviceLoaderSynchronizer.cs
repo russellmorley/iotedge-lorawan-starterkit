@@ -8,6 +8,7 @@ namespace LoRaWan.NetworkServer
     using System.Threading;
     using System.Threading.Tasks;
     using LoRaTools;
+    using LoRaTools.Services;
     using Microsoft.Extensions.Logging;
 
     /// <summary>
@@ -38,7 +39,7 @@ namespace LoRaWan.NetworkServer
         /// </summary>
         internal int CreatedDevicesCount { get; private set; }
 
-        private readonly LoRaDeviceAPIServiceBase loRaDeviceAPIService;
+        private readonly LoraDeviceManagerServicesBase loRaDeviceAPIService;
         private readonly ILoRaDeviceFactory deviceFactory;
         private readonly NetworkServerConfiguration configuration;
         private readonly DevAddr devAddr;
@@ -53,7 +54,7 @@ namespace LoRaWan.NetworkServer
 
         internal DeviceLoaderSynchronizer(
             DevAddr devAddr,
-            LoRaDeviceAPIServiceBase loRaDeviceAPIService,
+            LoraDeviceManagerServicesBase loRaDeviceAPIService,
             ILoRaDeviceFactory deviceFactory,
             NetworkServerConfiguration configuration,
             LoRaDeviceCache deviceCache,
@@ -118,7 +119,7 @@ namespace LoRaWan.NetworkServer
             }
         }
 
-        protected async Task CreateDevicesAsync(IReadOnlyList<IoTHubDeviceInfo> devices)
+        protected async Task CreateDevicesAsync(IReadOnlyList<IoTHubDeviceServiceInfo> devices)
         {
             if (devices?.Count > 0)
             {

@@ -10,8 +10,10 @@ namespace LoRaWan.Tests.Integration
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using LoraKeysManagerFacade;
+    using LoraDeviceManager;
+    using LoraDeviceManager.Cache;
     using LoRaTools;
+    using LoRaTools.CacheStore;
     using LoRaTools.IoTHubImpl;
     using LoRaWan.Tests.Common;
     using Microsoft.Azure.Devices.Shared;
@@ -23,9 +25,7 @@ namespace LoRaWan.Tests.Integration
     using Xunit.Abstractions;
 
     [Collection(RedisFixture.CollectionName)]
-#pragma warning disable xUnit1033 // False positive: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
     public class DevAddrCacheTest : FunctionTestBase, IClassFixture<RedisFixture>
-#pragma warning restore xUnit1033 // False positive: Test classes decorated with 'Xunit.IClassFixture<TFixture>' or 'Xunit.ICollectionFixture<TFixture>' should add a constructor argument of type TFixture
     {
         private const string FullUpdateKey = "fullUpdateKey";
         private const string GlobalDevAddrUpdateKey = "globalUpdateKey";
@@ -33,7 +33,7 @@ namespace LoRaWan.Tests.Integration
 
         private const string PrimaryKey = "ABCDEFGH1234567890";
 
-        private readonly ILoRaDeviceCacheStore cache;
+        private readonly ICacheStore cache;
         private readonly ITestOutputHelper testOutputHelper;
 
         public DevAddrCacheTest(RedisFixture redis, ITestOutputHelper testOutputHelper)
@@ -132,7 +132,7 @@ namespace LoRaWan.Tests.Integration
             return mockRegistryManager;
         }
 
-        private static void InitCache(ILoRaDeviceCacheStore cache, List<DevAddrCacheInfo> deviceIds)
+        private static void InitCache(ICacheStore cache, List<DevAddrCacheInfo> deviceIds)
         {
             var loradevaddrcache = new LoRaDevAddrCache(cache, null, null);
             foreach (var device in deviceIds)
@@ -202,8 +202,8 @@ namespace LoRaWan.Tests.Integration
             var lockToTake = new string[2] { FullUpdateKey, GlobalDevAddrUpdateKey };
             await LockDevAddrHelper.PrepareLocksForTests(this.cache, lockToTake);
 
-            var deviceGetter = SetupDeviceGetter(registryManagerMock.Object);
-            items = await deviceGetter.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
+            var loraDeviceManager = SetupLoraDeviceManager(registryManagerMock.Object, this.cache);
+            items = await loraDeviceManager.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
 
             Assert.Single(items);
             // If a cache miss it should save it in the redisCache
@@ -247,13 +247,14 @@ namespace LoRaWan.Tests.Integration
             var lockToTake = new string[2] { FullUpdateKey, GlobalDevAddrUpdateKey };
             await LockDevAddrHelper.PrepareLocksForTests(this.cache, lockToTake);
 
-            var deviceGetter = SetupDeviceGetter(registryManagerMock.Object);
+            var loraDeviceManager = SetupLoraDeviceManager(registryManagerMock.Object, this.cache);
+
             // Simulate three queries
             var tasks =
                 from gw in new[] { gateway1, gateway2 }
                 select Enumerable.Repeat(gw, 2) into gws // repeat each gateway twice
                 from gw in gws
-                select deviceGetter.GetDeviceList(null, gw, new DevNonce(0xABCD), devAddrJoining);
+                select loraDeviceManager.GetDeviceList(null, gw, new DevNonce(0xABCD), devAddrJoining);
 
             await Task.WhenAll(tasks);
 
@@ -300,8 +301,8 @@ namespace LoRaWan.Tests.Integration
             var lockToTake = new string[2] { FullUpdateKey, GlobalDevAddrUpdateKey };
             await LockDevAddrHelper.PrepareLocksForTests(this.cache, lockToTake);
 
-            var deviceGetter = SetupDeviceGetter(registryManagerMock.Object);
-            items = await deviceGetter.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
+            var loraDeviceManager = SetupLoraDeviceManager(registryManagerMock.Object, this.cache);
+            items = await loraDeviceManager.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
 
             Assert.Single(items);
             var queryResult = this.cache.GetHashObject(string.Concat(CacheKeyPrefix, devAddrJoining));
@@ -345,10 +346,11 @@ namespace LoRaWan.Tests.Integration
             var lockToTake = new string[2] { FullUpdateKey, GlobalDevAddrUpdateKey };
             await LockDevAddrHelper.PrepareLocksForTests(this.cache, lockToTake);
 
-            var deviceGetter = SetupDeviceGetter(registryManagerMock.Object);
+            var loraDeviceManager = SetupLoraDeviceManager(registryManagerMock.Object, this.cache);
+
             var tasks =
                 from gw in Enumerable.Repeat(gatewayId, 3)
-                select deviceGetter.GetDeviceList(null, gw, new DevNonce(0xABCD), devAddrJoining);
+                select loraDeviceManager.GetDeviceList(null, gw, new DevNonce(0xABCD), devAddrJoining);
 
             await Task.WhenAll(tasks);
             // Iot hub should never have been called.
@@ -394,8 +396,8 @@ namespace LoRaWan.Tests.Integration
             var lockToTake = new string[2] { FullUpdateKey, GlobalDevAddrUpdateKey };
             await LockDevAddrHelper.PrepareLocksForTests(this.cache, lockToTake);
 
-            var deviceGetter = SetupDeviceGetter(registryManagerMock.Object);
-            items = await deviceGetter.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
+            var loraDeviceManager = SetupLoraDeviceManager(registryManagerMock.Object, this.cache);
+            items = await loraDeviceManager.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
 
             Assert.Single(items);
             // Iot hub should never have been called.
@@ -436,8 +438,8 @@ namespace LoRaWan.Tests.Integration
             InitCache(this.cache, managerInput);
             var registryManagerMock = InitRegistryManager(managerInput);
 
-            var deviceGetter = new DeviceGetter(registryManagerMock.Object, this.cache, NullLogger<DeviceGetter>.Instance);
-            items = await deviceGetter.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
+            var loraDeviceManager = SetupLoraDeviceManager(registryManagerMock.Object, this.cache);
+            items = await loraDeviceManager.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
 
             Assert.Empty(items);
             var queryResult = this.cache.GetHashObject(string.Concat(CacheKeyPrefix, devAddrJoining));
@@ -484,8 +486,8 @@ namespace LoRaWan.Tests.Integration
 
             var items = new List<IoTHubDeviceInfo>();
 
-            var deviceGetter = SetupDeviceGetter(registryManagerMock.Object);
-            items = await deviceGetter.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
+            var loraDeviceManager = SetupLoraDeviceManager(registryManagerMock.Object, this.cache);
+            items = await loraDeviceManager.GetDeviceList(null, gatewayId, new DevNonce(0xABCD), devAddrJoining);
 
             Assert.Single(items);
             registryManagerMock.Verify(x => x.GetAllLoRaDevices(), Times.Once);
@@ -925,7 +927,13 @@ namespace LoRaWan.Tests.Integration
 
         private static DevAddr CreateDevAddr() => new DevAddr((uint)RandomNumberGenerator.GetInt32(int.MaxValue));
 
-        private DeviceGetter SetupDeviceGetter(IDeviceRegistryManager registryManager) =>
-            new DeviceGetter(registryManager, this.cache, new TestOutputLogger<DeviceGetter>(this.testOutputHelper));
+        private ILoraDeviceManager SetupLoraDeviceManager(IDeviceRegistryManager registryManager, ICacheStore cacheStore) =>
+            new LoraDeviceManagerImpl(
+                    registryManager,
+                    cacheStore,
+                    null,
+                    null,
+                    null,
+                    NullLogger<LoraDeviceManagerImpl>.Instance);
     }
 }

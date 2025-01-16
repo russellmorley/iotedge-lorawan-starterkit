@@ -7,6 +7,7 @@ namespace LoRaWan.NetworkServer
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using LoRaTools.Services;
     using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -20,7 +21,7 @@ namespace LoRaWan.NetworkServer
         // Caches a device making join for 30 minutes
         private const int INTERVAL_TO_CACHE_DEVICE_IN_JOIN_PROCESS_IN_MINUTES = 30;
 
-        private readonly LoRaDeviceAPIServiceBase loRaDeviceAPIService;
+        private readonly LoraDeviceManagerServicesBase loRaDeviceAPIService;
         private readonly ILoRaDeviceFactory deviceFactory;
         private readonly ILoggerFactory loggerFactory;
         private readonly ILogger<LoRaDeviceRegistry> logger;
@@ -40,7 +41,7 @@ namespace LoRaWan.NetworkServer
         public LoRaDeviceRegistry(
             NetworkServerConfiguration configuration,
             IMemoryCache cache,
-            LoRaDeviceAPIServiceBase loRaDeviceAPIService,
+            LoraDeviceManagerServicesBase loRaDeviceAPIService,
             ILoRaDeviceFactory deviceFactory,
             LoRaDeviceCache deviceCache,
             ILoggerFactory loggerFactory,
@@ -64,7 +65,7 @@ namespace LoRaWan.NetworkServer
         /// </summary>
         internal LoRaDeviceRegistry(NetworkServerConfiguration configuration,
                                     IMemoryCache cache,
-                                    LoRaDeviceAPIServiceBase loRaDeviceAPIService,
+                                    LoraDeviceManagerServicesBase loRaDeviceAPIService,
                                     ILoRaDeviceFactory deviceFactory, LoRaDeviceCache deviceCache)
             : this(configuration, cache, loRaDeviceAPIService, deviceFactory, deviceCache,
                    NullLoggerFactory.Instance, NullLogger<LoRaDeviceRegistry>.Instance)
@@ -158,7 +159,7 @@ namespace LoRaWan.NetworkServer
             if (string.IsNullOrEmpty(key))
                 return null;
 
-            var loRaDevice = await this.deviceFactory.CreateAndRegisterAsync(new IoTHubDeviceInfo { DevEUI = devEUI, PrimaryKey = key }, CancellationToken.None);
+            var loRaDevice = await this.deviceFactory.CreateAndRegisterAsync(new IoTHubDeviceServiceInfo { DevEUI = devEUI, PrimaryKey = key }, CancellationToken.None);
 
             if (this.initializers != null)
             {
@@ -179,7 +180,7 @@ namespace LoRaWan.NetworkServer
         private void RemoveJoinDeviceLoader(DevEui devEui) => this.cache.Remove(GetJoinDeviceLoaderCacheKey(devEui));
 
         // Gets or adds a join device loader to the memory cache
-        private JoinDeviceLoader GetOrCreateJoinDeviceLoader(IoTHubDeviceInfo ioTHubDeviceInfo)
+        private JoinDeviceLoader GetOrCreateJoinDeviceLoader(IoTHubDeviceServiceInfo ioTHubDeviceInfo)
         {
             // Need to get and ensure it has started since the GetOrAdd can create multiple objects
             // https://github.com/aspnet/Extensions/issues/708

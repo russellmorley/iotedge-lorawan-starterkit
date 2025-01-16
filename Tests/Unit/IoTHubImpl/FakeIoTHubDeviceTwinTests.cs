@@ -23,5 +23,10 @@ namespace LoRaWan.Tests.Unit.IoTHubImpl
         {
             throw new NotImplementedException();
         }
+
+        public string GetTag(string tag)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

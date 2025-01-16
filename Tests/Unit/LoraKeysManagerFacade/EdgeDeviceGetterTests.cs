@@ -5,8 +5,8 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
 {
     using System;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
     using global::LoRaTools;
+    using global::LoRaTools.EdgeDeviceGetter;
     using Microsoft.Extensions.Logging.Abstractions;
     using Moq;
     using Xunit;

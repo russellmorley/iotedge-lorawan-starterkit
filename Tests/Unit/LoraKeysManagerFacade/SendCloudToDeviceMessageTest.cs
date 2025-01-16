@@ -10,9 +10,13 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
+    using global::LoraKeysManagerFacade.LoraDeviceDownstreamService;
     using global::LoRaTools;
-    using global::LoRaTools.CommonAPI;
+    using global::LoRaTools.CacheStore;
+    using global::LoRaTools.ChannelPublisher;
+    using global::LoRaTools.EdgeDeviceGetter;
+    using global::LoRaTools.ServiceClient;
+    using global::LoRaTools.Services;
     using LoRaWan.Tests.Common;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
@@ -33,7 +37,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         private readonly Mock<IDeviceRegistryManager> registryManager;
         private readonly Mock<IEdgeDeviceGetter> edgeDeviceGetter;
         private readonly Mock<IChannelPublisher> channelPublisher;
-        private readonly SendCloudToDeviceMessage sendCloudToDeviceMessage;
+        private readonly SendCloudToDeviceMessageFunction sendCloudToDeviceMessageFunction;
 
         public SendCloudToDeviceMessageTest()
         {
@@ -42,12 +46,12 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager = new Mock<IDeviceRegistryManager>(MockBehavior.Strict);
             this.edgeDeviceGetter = new Mock<IEdgeDeviceGetter>();
             this.channelPublisher = new Mock<IChannelPublisher>();
-            this.sendCloudToDeviceMessage = new SendCloudToDeviceMessage(this.cacheStore,
+            this.sendCloudToDeviceMessageFunction = new SendCloudToDeviceMessageFunction(this.cacheStore,
                                                                          this.registryManager.Object,
                                                                          this.serviceClient.Object,
                                                                          this.edgeDeviceGetter.Object,
                                                                          this.channelPublisher.Object,
-                                                                         new NullLogger<SendCloudToDeviceMessage>());
+                                                                         new NullLogger<SendCloudToDeviceMessageFunction>());
         }
 
         [Theory]
@@ -63,7 +67,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             var request = new DefaultHttpContext().Request;
             request.Body = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(c2dMessage)));
 
-            var result = await this.sendCloudToDeviceMessage.Run(request, devEUI, default);
+            var result = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessage(request, devEUI, default);
 
             Assert.IsType<BadRequestObjectResult>(result);
 
@@ -74,7 +78,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         [Fact]
         public async Task When_Request_Is_Missing_Should_Return_BadRequest()
         {
-            var actual = await this.sendCloudToDeviceMessage.Run(null, new DevEui(123456789).ToString(), default);
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessage(null, new DevEui(123456789).ToString(), default);
 
             Assert.IsType<BadRequestObjectResult>(actual);
 
@@ -85,7 +89,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
         [Fact]
         public async Task When_Message_Is_Missing_Should_Return_BadRequest()
         {
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 new DevEui(123456789),
                 null,
                 default);
@@ -107,7 +111,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                 Payload = "hello",
             };
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 c2dMessage,
                 default);
@@ -149,7 +153,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                     .Callback<string, LnsRemoteCall>((device, remoteCall) => receivedC2DMessage = JsonConvert.DeserializeObject<LoRaCloudToDeviceMessage>(remoteCall.JsonData));
             }
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 actualMessage,
                 default);
@@ -179,7 +183,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.serviceClient.Setup(x => x.InvokeDeviceMethodAsync("gateway1", Constants.NetworkServerModuleId, It.IsNotNull<CloudToDeviceMethod>(), default))
                 .ReturnsAsync(new CloudToDeviceMethodResult() { Status = (int)HttpStatusCode.BadRequest });
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 new LoRaCloudToDeviceMessage()
                 {
@@ -205,7 +209,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.serviceClient.Setup(x => x.InvokeDeviceMethodAsync("gateway1", Constants.NetworkServerModuleId, It.IsNotNull<CloudToDeviceMethod>(), default))
                 .ThrowsAsync(new IotHubCommunicationException(string.Empty));
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 new LoRaCloudToDeviceMessage()
                 {
@@ -238,7 +242,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(x => x.FindDeviceByDevEUI(It.IsNotNull<DevEui>()))
                 .Returns(query.Object);
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 new LoRaCloudToDeviceMessage()
                 {
@@ -265,7 +269,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(x => x.FindDeviceByDevEUI(It.IsNotNull<DevEui>()))
                 .Returns(query.Object);
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 new LoRaCloudToDeviceMessage()
                 {
@@ -293,7 +297,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.registryManager.Setup(x => x.FindDeviceByDevEUI(It.IsNotNull<DevEui>()))
                 .Returns(query.Object);
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 new LoRaCloudToDeviceMessage()
                 {
@@ -355,7 +359,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             }
 
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 actualMessage, default);
 
@@ -420,7 +424,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                     .Callback<string, LnsRemoteCall>((device, remoteCall) => receivedC2DMessage = JsonConvert.DeserializeObject<LoRaCloudToDeviceMessage>(remoteCall.JsonData));
             }
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 actualMessage, default);
 
@@ -469,7 +473,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                 Payload = "hello",
             };
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 actualMessage, default);
 
@@ -515,7 +519,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
                 .Callback((string d, Message m) => (receivedProperties, receivedC2DMessage) = (m.Properties, JsonConvert.DeserializeObject<LoRaCloudToDeviceMessage>(Encoding.UTF8.GetString(m.GetBytes()))))
                 .Returns(Task.CompletedTask);
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 actualMessage, default);
 
@@ -566,7 +570,7 @@ namespace LoRaWan.Tests.Unit.LoraKeysManagerFacade
             this.serviceClient.Setup(x => x.SendAsync(devEui.ToString(), It.IsNotNull<Message>()))
                 .ThrowsAsync(new IotHubCommunicationException(string.Empty));
 
-            var actual = await this.sendCloudToDeviceMessage.SendCloudToDeviceMessageImplementationAsync(
+            var actual = await this.sendCloudToDeviceMessageFunction.SendCloudToDeviceMessageImplementationAsync(
                 devEui,
                 actualMessage, default);
 

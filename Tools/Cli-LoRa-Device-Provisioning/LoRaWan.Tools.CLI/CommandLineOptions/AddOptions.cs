@@ -13,6 +13,7 @@ namespace LoRaWan.Tools.CLI.Options
     {
         private const string ConcentratorSetName = "Concentrator";
         private const string LoRaDeviceSetName = "LoRaDevice";
+        private const string DefaultTenantId = "";
 
         [Option(
             "type",
@@ -229,6 +230,14 @@ namespace LoRaWan.Tools.CLI.Options
             HelpText = "Network identifier for LNS Discovery purposes"
             )]
         public string Network { get; set; }
+
+        [Option(
+            "tenant-id",
+            Default = DefaultTenantId,
+            Required = false,
+            HelpText = "Tenant Id."
+        )]
+        public string TenantId { get; set; }
     }
 
     [Mapper]

@@ -7,7 +7,7 @@ namespace LoRaWan.Tests.E2E
     using System.Globalization;
     using System.Threading.Tasks;
     using LoRaTools;
-    using LoRaTools.CommonAPI;
+    using LoRaTools.Services;
     using LoRaWan.Tests.Common;
     using Xunit;
     using XunitRetryHelper;

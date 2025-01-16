@@ -6,6 +6,7 @@ namespace LoRaWan.Tests.Integration
     using System;
     using System.Threading.Tasks;
     using LoRaTools.ADR;
+    using LoRaTools.FunctionBundler;
     using LoRaTools.LoRaMessage;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.ADR;

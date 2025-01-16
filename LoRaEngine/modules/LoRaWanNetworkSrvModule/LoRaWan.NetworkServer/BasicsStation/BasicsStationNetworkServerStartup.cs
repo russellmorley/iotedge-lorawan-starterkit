@@ -11,13 +11,15 @@ namespace LoRaWan.NetworkServer.BasicsStation
     using System.Threading.Tasks;
     using Logger;
     using LoRaTools.ADR;
-    using LoRaTools.CommonAPI;
     using LoRaTools.NetworkServerDiscovery;
+    using LoRaTools.Services;
+    using LoRaTools.Version;
     using LoRaWan;
     using LoRaWan.NetworkServer;
     using LoRaWan.NetworkServer.ADR;
     using LoRaWan.NetworkServer.BasicsStation.ModuleConnection;
     using LoRaWan.NetworkServer.BasicsStation.Processors;
+    using LoRaWan.NetworkServer.Services;
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.AspNetCore.Extensions;
     using Microsoft.ApplicationInsights.Extensibility;
@@ -99,7 +101,8 @@ namespace LoRaWan.NetworkServer.BasicsStation
                 .AddSingleton<IBasicsStationConfigurationService, BasicsStationConfigurationService>()
                 .AddSingleton<IClassCDeviceMessageSender, DefaultClassCDevicesMessageSender>()
                 .AddSingleton<ILoRaModuleClientFactory>(loraModuleFactory)
-                .AddSingleton<LoRaDeviceAPIServiceBase, LoRaDeviceAPIService>()
+                .AddSingleton<ITenantValidationStrategy>(new Sha256TenantValidationStrategy() { DoValidation = NetworkServerConfiguration.ServiceValidatesTenant })
+                .AddSingleton<LoraDeviceManagerServicesBase, LoraDeviceManagerServicesProxy>()
                 .AddSingleton<WebSocketWriterRegistry<StationEui, string>>()
                 .AddSingleton<IDownstreamMessageSender, DownstreamMessageSender>()
                 .AddSingleton<LoRaDeviceCache>()

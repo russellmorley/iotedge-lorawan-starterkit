@@ -4,17 +4,18 @@
 namespace LoRaWan.NetworkServer.ADR
 {
     using LoRaTools.ADR;
+    using LoRaTools.Services;
     using Microsoft.Extensions.Logging;
     using System;
 
     public class LoRAADRManagerFactory : ILoRAADRManagerFactory
     {
-        private readonly LoRaDeviceAPIServiceBase loRaDeviceAPIService;
+        private readonly LoraDeviceManagerServicesBase loRaDeviceAPIService;
         private readonly ILoggerFactory loggerFactory;
         private static readonly object InMemoryStoreLock = new object();
         private static volatile LoRaADRInMemoryStore inMemoryStore;
 
-        public LoRAADRManagerFactory(LoRaDeviceAPIServiceBase loRaDeviceAPIService, ILoggerFactory loggerFactory)
+        public LoRAADRManagerFactory(LoraDeviceManagerServicesBase loRaDeviceAPIService, ILoggerFactory loggerFactory)
         {
             this.loRaDeviceAPIService = loRaDeviceAPIService;
             this.loggerFactory = loggerFactory;

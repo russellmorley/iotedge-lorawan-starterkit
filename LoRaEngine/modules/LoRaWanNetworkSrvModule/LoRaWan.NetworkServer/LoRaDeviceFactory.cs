@@ -9,6 +9,7 @@ namespace LoRaWan.NetworkServer
     using System.Diagnostics.Metrics;
     using Microsoft.Azure.Devices.Client;
     using Microsoft.Extensions.Logging;
+    using LoRaTools.Services;
 
     public class LoRaDeviceFactory : ILoRaDeviceFactory
     {
@@ -40,12 +41,12 @@ namespace LoRaWan.NetworkServer
             this.loRaDeviceCache = loRaDeviceCache;
         }
 
-        public Task<LoRaDevice> CreateAndRegisterAsync(IoTHubDeviceInfo deviceInfo, CancellationToken cancellationToken)
+        public Task<LoRaDevice> CreateAndRegisterAsync(IoTHubDeviceServiceInfo deviceInfo, CancellationToken cancellationToken)
         {
             _ = deviceInfo ?? throw new ArgumentNullException(nameof(deviceInfo));
 
             if (string.IsNullOrEmpty(deviceInfo.PrimaryKey) || !deviceInfo.DevEUI.IsValid)
-                throw new ArgumentException($"Incomplete {nameof(IoTHubDeviceInfo)}", nameof(deviceInfo));
+                throw new ArgumentException($"Incomplete {nameof(IoTHubDeviceServiceInfo)}", nameof(deviceInfo));
 
             if (this.loRaDeviceCache.TryGetByDevEui(deviceInfo.DevEUI, out _))
                 throw new InvalidOperationException($"Device {deviceInfo.DevEUI} already registered");
@@ -53,7 +54,7 @@ namespace LoRaWan.NetworkServer
             return RegisterCoreAsync(deviceInfo, cancellationToken);
         }
 
-        private async Task<LoRaDevice> RegisterCoreAsync(IoTHubDeviceInfo deviceInfo, CancellationToken cancellationToken)
+        private async Task<LoRaDevice> RegisterCoreAsync(IoTHubDeviceServiceInfo deviceInfo, CancellationToken cancellationToken)
         {
             var loRaDevice = CreateDevice(deviceInfo);
             var loRaDeviceClient = CreateDeviceClient(deviceInfo.DevEUI.ToString(), deviceInfo.PrimaryKey);
@@ -103,7 +104,7 @@ namespace LoRaWan.NetworkServer
             }
         }
 
-        protected virtual LoRaDevice CreateDevice(IoTHubDeviceInfo deviceInfo)
+        protected virtual LoRaDevice CreateDevice(IoTHubDeviceServiceInfo deviceInfo)
         {
             return deviceInfo == null
                     ? throw new ArgumentNullException(nameof(deviceInfo))

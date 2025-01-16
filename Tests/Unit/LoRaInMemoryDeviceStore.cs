@@ -8,11 +8,11 @@ namespace LoRaWan.Tests.Unit
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::LoraKeysManagerFacade;
+    using global::LoRaTools.CacheStore;
     using Newtonsoft.Json;
     using StackExchange.Redis;
 
-    internal class LoRaInMemoryDeviceStore : ILoRaDeviceCacheStore
+    internal class LoRaInMemoryDeviceStore : ICacheStore
     {
         private static readonly TimeSpan LockTimeout = TimeSpan.FromSeconds(60);
         private readonly ConcurrentDictionary<string, object> cache;
